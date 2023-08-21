@@ -59,12 +59,12 @@ TabDockRightClients=DockSite2=0,DockSite4=1
 [View0]
 CustomEditViewType=TEditView
 Module=C:\proj\test_delphi\delphi_vtv_dnd\Unit1.pas
-CursorX=76
-CursorY=93
-TopLine=91
+CursorX=1
+CursorY=254
+TopLine=256
 LeftCol=1
-Elisions={{129,0},{202,11},{'report SQLText'}}{{565,0},{586,11},{'skiped'}}{{715,0},{735,11},{'skiped'}}
-Bookmarks=
+Elisions={{152,0},{225,11},{'report SQLText'}}{{724,0},{745,11},{'skiped'}}{{874,0},{894,11},{'skiped'}}
+Bookmarks={1,597,6}{2,342,1}{4,252,1}{5,296,1}{6,468,1}
 EditViewName=C:\proj\test_delphi\delphi_vtv_dnd\Unit1.pas
 
 [Watches]
@@ -236,11 +236,6 @@ LRDockWidth=2160
 Dockable=1
 StayOnTop=0
 SplitPos=140
-
-[PropInspDesignerSelection]
-ArrangeBy=Name
-SelectedItem=Action,
-ExpandedItems=StyleElements=0,Touch=0,Anchors=0,BorderIcons=0
 
 [DebugLogView]
 PercentageSizes=1

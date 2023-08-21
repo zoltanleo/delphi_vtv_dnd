@@ -9,7 +9,7 @@ uses
   DBAxisGridsEh, DBGridEh, fib, Vcl.ComCtrls
   , VirtualTrees, Vcl.ExtCtrls, System.Actions
   , Vcl.ActnList
-  , Winapi.ActiveX
+  , Winapi.ActiveX, Vcl.Samples.Spin
   ;
 
 type
@@ -34,20 +34,35 @@ type
     actPriceDel: TAction;
     mds_labor: TMemTableEh;
     mds_src: TMemTableEh;
-    Panel1: TPanel;
+    pnlTblPrice: TPanel;
+    DBGridEh1: TDBGridEh;
+    Panel3: TPanel;
+    ActRootAdd: TAction;
+    ActChildAdd: TAction;
+    ActNodeEdt: TAction;
+    ActNodeDel: TAction;
+    pnlPrices: TPanel;
     cbbPrice: TComboBox;
     btnPriceAdd: TButton;
     btnPriceDel: TButton;
-    Panel2: TPanel;
-    DBGridEh1: TDBGridEh;
-    Panel3: TPanel;
+    pnlEdtNodeData: TPanel;
+    edtPriceCost: TEdit;
+    udPriceCost: TUpDown;
+    edtPriceName: TEdit;
+    Label1: TLabel;
+    Button2: TButton;
+    Button3: TButton;
+    ActNodeDataSave: TAction;
+    ActNodeDataCancel: TAction;
+    ActChkStatusBtn: TAction;
+    actEdtNodeDataOn: TAction;
+    actEdtNodeDataOff: TAction;
+    pnlTreeView: TPanel;
     vst: TVirtualStringTree;
-    btnItemAdd: TButton;
-    btnItemEdt: TButton;
-    btnItemDel: TButton;
-    ActNodeAdd: TAction;
-    ActNodeEdt: TAction;
-    ActNodeDel: TAction;
+    btnRootAdd: TButton;
+    btnChildAdd: TButton;
+    btnNodeEdt: TButton;
+    btnNodeDel: TButton;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure cbbPriceChange(Sender: TObject);
@@ -59,9 +74,9 @@ type
     procedure vstNewText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; NewText: string);
     procedure vstEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
     procedure vstKeyPress(Sender: TObject; var Key: Char);
-    procedure ActNodeAddExecute(Sender: TObject);
+    procedure ActRootAddExecute(Sender: TObject);
+    procedure ActChildAddExecute(Sender: TObject);
     procedure ActNodeEdtExecute(Sender: TObject);
-    procedure ActNodeDelExecute(Sender: TObject);
     procedure vstDragOver(Sender: TBaseVirtualTree; Source: TObject; Shift: TShiftState; State: TDragState; Pt: TPoint;
       Mode: TDropMode; var Effect: Integer; var Accept: Boolean);
     procedure vstDragDrop(Sender: TBaseVirtualTree; Source: TObject; DataObject: IDataObject; Formats: TFormatArray;
@@ -70,6 +85,14 @@ type
     procedure vstNodeClick(Sender: TBaseVirtualTree; const HitInfo: THitInfo);
     procedure vstStartDrag(Sender: TObject; var DragObject: TDragObject);
     procedure vstDragAllowed(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
+    procedure ActNodeDelExecute(Sender: TObject);
+    procedure edtPriceCostChange(Sender: TObject);
+    procedure edtPriceCostKeyPress(Sender: TObject; var Key: Char);
+    procedure ActNodeDataSaveExecute(Sender: TObject);
+    procedure ActNodeDataCancelExecute(Sender: TObject);
+    procedure ActChkStatusBtnExecute(Sender: TObject);
+    procedure actEdtNodeDataOffExecute(Sender: TObject);
+    procedure actEdtNodeDataOnExecute(Sender: TObject);
   private
     FClinicID: Integer;
     FPeolpeID: Integer;
@@ -208,9 +231,85 @@ implementation
 
 {$R *.dfm}
 
-procedure TForm1.ActNodeAddExecute(Sender: TObject);
+procedure TForm1.ActRootAddExecute(Sender: TObject);
 begin
-//
+  actEdtNodeDataOnExecute(Sender);
+end;
+
+procedure TForm1.ActChkStatusBtnExecute(Sender: TObject);
+var
+  NodeLvl: Integer;
+  Nodes: TNodeArray;
+  I: Integer;
+begin
+  ActNodeEdt.Enabled:= (vst.SelectedCount = 1);
+  btnNodeEdt.Enabled:= ActNodeEdt.Enabled;
+  ActNodeDel.Enabled:= (vst.SelectedCount > 0);
+  btnNodeDel.Enabled:= ActNodeDel.Enabled;
+
+  ActChildAdd.Enabled:= (vst.RootNodeCount > 0);
+  btnChildAdd.Enabled:= ActChildAdd.Enabled;
+end;
+
+procedure TForm1.actEdtNodeDataOffExecute(Sender: TObject);
+var
+  i: Integer;
+  EditMode: Boolean;
+begin
+  vst.BeginUpdate;
+  try
+    vst.Refresh;
+    EditMode:= False;
+
+    for I := 0 to  Pred(pnlTreeView.ControlCount) do
+    begin
+      if TObject(pnlTreeView.Controls[i]).InheritsFrom(TButton) then
+        TButton(pnlTreeView.Controls[i]).Enabled:= not EditMode;
+    end;
+
+    vst.Enabled:= not EditMode;
+    pnlEdtNodeData.Visible:= EditMode;
+
+    ActRootAdd.Enabled:= not EditMode;
+    ActChildAdd.Enabled:= not EditMode;
+    ActNodeEdt.Enabled:= not EditMode;
+    ActNodeDel.Enabled:= not EditMode;
+  finally
+    vst.EndUpdate;
+    ActChkStatusBtnExecute(Sender);
+  end;
+end;
+
+procedure TForm1.actEdtNodeDataOnExecute(Sender: TObject);
+var
+  i: Integer;
+  EditMode: Boolean;
+begin
+  EditMode:= True;
+
+  for I := 0 to  Pred(Panel3.ControlCount) do
+  begin
+    if TObject(Panel3.Controls[i]).InheritsFrom(TButton) then
+      TButton(Panel3.Controls[i]).Enabled:= not EditMode;
+  end;
+
+  vst.Enabled:= not EditMode;
+  pnlEdtNodeData.Visible:= EditMode;
+
+  ActRootAdd.Enabled:= not EditMode;
+  ActChildAdd.Enabled:= not EditMode;
+  ActNodeEdt.Enabled:= not EditMode;
+  ActNodeDel.Enabled:= not EditMode;
+end;
+
+procedure TForm1.ActNodeDataCancelExecute(Sender: TObject);
+begin
+  actEdtNodeDataOffExecute(Sender);
+end;
+
+procedure TForm1.ActNodeDataSaveExecute(Sender: TObject);
+begin
+  actEdtNodeDataOffExecute(Sender);
 end;
 
 procedure TForm1.ActNodeDelExecute(Sender: TObject);
@@ -220,7 +319,12 @@ end;
 
 procedure TForm1.ActNodeEdtExecute(Sender: TObject);
 begin
-//
+  actEdtNodeDataOnExecute(Sender);
+end;
+
+procedure TForm1.ActChildAddExecute(Sender: TObject);
+begin
+  actEdtNodeDataOnExecute(Sender);
 end;
 
 procedure TForm1.actPriceAddExecute(Sender: TObject);
@@ -235,7 +339,6 @@ begin
     vst.Clear;
 
     mds_price.DisableControls;
-
     if mds_labor.Active
       then mds_labor.EmptyTable
       else mds_labor.Active:= True;
@@ -337,6 +440,39 @@ begin
   finally
     mds_price.EnableControls;
   end;
+end;
+
+procedure TForm1.edtPriceCostChange(Sender: TObject);
+var
+  tmpCurr: Currency;
+  fs: TFormatSettings;
+begin
+//  Exit;
+//  try
+//    tmpCurr:= StrToCurr(edtPriceCost.Text);
+//    Label1.Caption:= Format('%2.2f',[tmpCurr])
+//  except
+//    on E:  EConvertError do
+//    begin
+//      Label1.Caption:= '<некорректное значение>';
+//      ShowMessage(E.Message);
+//    end;
+//  end;
+  fs:= TFormatSettings.Create;
+  if TryStrToCurr(edtPriceCost.Text, tmpCurr,fs) then
+  begin
+    Label1.Caption:= Format('%2.2f',[tmpCurr]);
+//    udPriceCost.Position:= Trunc(tmpCurr);
+  end;
+
+end;
+
+procedure TForm1.edtPriceCostKeyPress(Sender: TObject; var Key: Char);
+var
+  fs: TFormatSettings;
+begin
+  fs:= TFormatSettings.Create;
+  if not (Key in ['0'..'9','-',fs.DecimalSeparator]) then Key:= #0;
 end;
 
 procedure TForm1.FillCbbPrice(Sender: TObject);
@@ -509,8 +645,10 @@ begin
 
       FillCbbPrice(Sender);
       cbbPriceChange(Sender);
+      pnlTblPrice.Visible:= False;
       actPriceAddExecute(Sender);
       vst.FullExpand(nil);
+      actEdtNodeDataOffExecute(Sender);
     except
       on E: EFIBError do
       begin
@@ -526,19 +664,40 @@ end;
 procedure TForm1.vstAddToSelection(Sender: TBaseVirtualTree; Node: PVirtualNode);
 var
   NodeLvl: Integer;
+  Nodes: TNodeArray;
+  i: Integer;
 begin
-//  vst.TreeOptions.SelectionOptions:= vst.TreeOptions.SelectionOptions + [toMultiSelect];
+//  case Sender.SelectedCount of
+//    0:
+//      begin
 //
-//  if (Sender.SelectedCount >= 1) then
-//  begin
-//    NodeLvl:= Sender.GetNodeLevel(Node);
-//    case NodeLvl of
-//      0: vst.TreeOptions.SelectionOptions:= vst.TreeOptions.SelectionOptions - [toMultiSelect];
-//      1: vst.TreeOptions.SelectionOptions:= vst.TreeOptions.SelectionOptions + [toMultiSelect];
-//    end;
+//      end;
+//    1:
+//      begin
+//        ActNodeDel.en
+//      end;
+//    else
+//      begin
+//        Nodes:= Sender.GetSortedSelection(True);
+//        for i := 0 to Pred(System.Length(Nodes)) do
+//        begin
+//          NodeLvl:= Sender.GetNodeLevel(Nodes[i]);
+//          case NodeLvl of
+//            0:
+//              begin
+////                act
+//              end;
+//            1:
+//              begin
 //
-//    Sender.Selected[Node]:= True;
+//              end;
+//          end;
+//        end;
+//      end;
+//
 //  end;
+
+  ActChkStatusBtnExecute(Sender);
 end;
 
 procedure TForm1.vstDragAllowed(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;

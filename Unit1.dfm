@@ -2,8 +2,8 @@ object Form1: TForm1
   Left = 0
   Top = 0
   Caption = 'Form1'
-  ClientHeight = 468
-  ClientWidth = 1065
+  ClientHeight = 469
+  ClientWidth = 1008
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -13,64 +13,23 @@ object Form1: TForm1
   OnCreate = FormCreate
   OnShow = FormShow
   TextHeight = 15
-  object Panel1: TPanel
+  object pnlTblPrice: TPanel
     Left = 0
     Top = 0
-    Width = 1065
-    Height = 41
-    Align = alTop
-    Caption = 'Panel1'
+    Width = 353
+    Height = 469
+    Align = alLeft
+    Caption = 'pnlTblPrice'
     TabOrder = 0
-    ExplicitWidth = 1061
+    ExplicitHeight = 468
     DesignSize = (
-      1065
-      41)
-    object cbbPrice: TComboBox
-      Left = 8
-      Top = 8
-      Width = 302
-      Height = 23
-      Anchors = [akLeft, akTop, akRight]
-      TabOrder = 0
-      Text = 'cbbPrice'
-      OnChange = cbbPriceChange
-      ExplicitWidth = 298
-    end
-    object btnPriceAdd: TButton
-      Left = 320
-      Top = 8
-      Width = 23
-      Height = 23
-      Action = actPriceAdd
-      TabOrder = 1
-    end
-    object btnPriceDel: TButton
-      Left = 349
-      Top = 8
-      Width = 23
-      Height = 23
-      Action = actPriceDel
-      TabOrder = 2
-    end
-  end
-  object Panel2: TPanel
-    Left = 0
-    Top = 41
-    Width = 320
-    Height = 427
-    Align = alClient
-    Caption = 'Panel2'
-    TabOrder = 1
-    ExplicitWidth = 316
-    ExplicitHeight = 426
-    DesignSize = (
-      320
-      427)
+      353
+      469)
     object DBGridEh1: TDBGridEh
-      Left = 8
-      Top = 4
-      Width = 312
-      Height = 416
+      Left = 9
+      Top = 48
+      Width = 337
+      Height = 412
       Anchors = [akLeft, akTop, akRight, akBottom]
       DataSource = ds_price
       DynProps = <>
@@ -78,90 +37,227 @@ object Form1: TForm1
       object RowDetailData: TRowDetailPanelControlEh
       end
     end
+    object pnlPrices: TPanel
+      Left = 1
+      Top = 1
+      Width = 351
+      Height = 41
+      Align = alTop
+      Caption = 'pnlPrices'
+      TabOrder = 1
+      DesignSize = (
+        351
+        41)
+      object cbbPrice: TComboBox
+        Left = 8
+        Top = 8
+        Width = 279
+        Height = 23
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 0
+        Text = 'cbbPrice'
+        OnChange = cbbPriceChange
+      end
+      object btnPriceAdd: TButton
+        Left = 293
+        Top = 8
+        Width = 23
+        Height = 23
+        Action = actPriceAdd
+        Anchors = [akTop, akRight]
+        TabOrder = 1
+      end
+      object btnPriceDel: TButton
+        Left = 322
+        Top = 8
+        Width = 23
+        Height = 23
+        Action = actPriceDel
+        Anchors = [akTop, akRight]
+        TabOrder = 2
+      end
+    end
   end
   object Panel3: TPanel
-    Left = 320
-    Top = 41
-    Width = 745
-    Height = 427
-    Align = alRight
+    Left = 353
+    Top = 0
+    Width = 655
+    Height = 469
+    Align = alClient
     Caption = 'Panel3'
-    TabOrder = 2
-    ExplicitLeft = 316
-    ExplicitHeight = 426
-    DesignSize = (
-      745
-      427)
-    object vst: TVirtualStringTree
-      Left = 8
-      Top = 6
-      Width = 649
-      Height = 414
-      Anchors = [akLeft, akTop, akRight, akBottom]
-      DragMode = dmAutomatic
-      DragOperations = [doCopy, doMove, doLink]
-      Header.AutoSizeIndex = 0
-      Header.Height = 20
-      Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowHint, hoShowImages, hoShowSortGlyphs, hoVisible, hoFullRepaintOnResize]
-      HintMode = hmTooltip
-      ParentShowHint = False
-      ShowHint = True
+    TabOrder = 1
+    object pnlEdtNodeData: TPanel
+      Left = 1
+      Top = 1
+      Width = 653
+      Height = 56
+      Align = alTop
+      Caption = 'pnlEdtNodeData'
       TabOrder = 0
-      TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScrollOnExpand, toAutoSort, toAutoTristateTracking, toAutoChangeScale]
-      TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toEditable, toFullRepaintOnResize, toInitOnSave, toWheelPanning, toEditOnClick]
-      TreeOptions.SelectionOptions = [toExtendedFocus, toFullRowSelect, toLevelSelectConstraint, toMultiSelect, toSiblingSelectConstraint, toAlwaysSelectNode]
-      OnAddToSelection = vstAddToSelection
-      OnDragAllowed = vstDragAllowed
-      OnDragOver = vstDragOver
-      OnDragDrop = vstDragDrop
-      OnEditing = vstEditing
-      OnFreeNode = vstFreeNode
-      OnGetText = vstGetText
-      OnGetNodeDataSize = vstGetNodeDataSize
-      OnKeyPress = vstKeyPress
-      OnNewText = vstNewText
-      OnNodeClick = vstNodeClick
-      OnStartDrag = vstStartDrag
-      Touch.InteractiveGestures = [igPan, igPressAndTap]
-      Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-      Columns = <
-        item
-          Position = 0
-          Text = #1053#1072#1079#1074#1072#1085#1080#1077
-          Width = 545
-        end
-        item
-          Position = 1
-          Text = #1057#1090#1086#1080#1084#1086#1089#1090#1100
-          Width = 100
-        end>
+      ExplicitWidth = 649
+      DesignSize = (
+        653
+        56)
+      object Label1: TLabel
+        Left = 7
+        Top = 37
+        Width = 34
+        Height = 15
+        Caption = 'Label1'
+      end
+      object edtPriceCost: TEdit
+        Left = 329
+        Top = 8
+        Width = 121
+        Height = 23
+        Anchors = [akTop, akRight]
+        TabOrder = 0
+        Text = '0'
+        OnChange = edtPriceCostChange
+        OnKeyPress = edtPriceCostKeyPress
+        ExplicitLeft = 325
+      end
+      object udPriceCost: TUpDown
+        Left = 450
+        Top = 8
+        Width = 17
+        Height = 23
+        Anchors = [akTop, akRight]
+        Associate = edtPriceCost
+        DoubleBuffered = True
+        Max = 100000000
+        Increment = 50
+        ParentDoubleBuffered = False
+        TabOrder = 1
+        Thousands = False
+        ExplicitLeft = 446
+      end
+      object edtPriceName: TEdit
+        Left = 7
+        Top = 8
+        Width = 316
+        Height = 23
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 2
+        Text = 'edtPriceName'
+        ExplicitWidth = 312
+      end
+      object Button2: TButton
+        Left = 490
+        Top = 8
+        Width = 75
+        Height = 25
+        Action = ActNodeDataSave
+        Anchors = [akTop, akRight]
+        TabOrder = 3
+        ExplicitLeft = 486
+      end
+      object Button3: TButton
+        Left = 571
+        Top = 7
+        Width = 75
+        Height = 25
+        Action = ActNodeDataCancel
+        Anchors = [akTop, akRight]
+        TabOrder = 4
+        ExplicitLeft = 567
+      end
     end
-    object btnItemAdd: TButton
-      Left = 663
-      Top = 6
-      Width = 75
-      Height = 25
-      Action = ActNodeAdd
-      Anchors = [akTop, akRight]
+    object pnlTreeView: TPanel
+      Left = 1
+      Top = 57
+      Width = 653
+      Height = 411
+      Align = alClient
+      Caption = 'pnlTreeView'
       TabOrder = 1
-    end
-    object btnItemEdt: TButton
-      Left = 663
-      Top = 37
-      Width = 75
-      Height = 25
-      Action = ActNodeEdt
-      Anchors = [akTop, akRight]
-      TabOrder = 2
-    end
-    object btnItemDel: TButton
-      Left = 663
-      Top = 68
-      Width = 75
-      Height = 25
-      Action = ActNodeDel
-      Anchors = [akTop, akRight]
-      TabOrder = 3
+      DesignSize = (
+        653
+        411)
+      object vst: TVirtualStringTree
+        Left = 5
+        Top = 6
+        Width = 559
+        Height = 398
+        Anchors = [akLeft, akTop, akRight, akBottom]
+        DragMode = dmAutomatic
+        DragOperations = [doCopy, doMove, doLink]
+        Header.AutoSizeIndex = 0
+        Header.Height = 20
+        Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowHint, hoShowImages, hoShowSortGlyphs, hoVisible, hoFullRepaintOnResize]
+        HintMode = hmTooltip
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 0
+        TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScrollOnExpand, toAutoSort, toAutoTristateTracking, toAutoChangeScale]
+        TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toWheelPanning, toEditOnClick]
+        TreeOptions.SelectionOptions = [toExtendedFocus, toFullRowSelect, toLevelSelectConstraint, toMultiSelect, toSiblingSelectConstraint, toAlwaysSelectNode]
+        OnAddToSelection = vstAddToSelection
+        OnDragAllowed = vstDragAllowed
+        OnDragOver = vstDragOver
+        OnDragDrop = vstDragDrop
+        OnEditing = vstEditing
+        OnFreeNode = vstFreeNode
+        OnGetText = vstGetText
+        OnGetNodeDataSize = vstGetNodeDataSize
+        OnKeyPress = vstKeyPress
+        OnNewText = vstNewText
+        OnNodeClick = vstNodeClick
+        OnStartDrag = vstStartDrag
+        Touch.InteractiveGestures = [igPan, igPressAndTap]
+        Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
+        Columns = <
+          item
+            Position = 0
+            Text = #1053#1072#1079#1074#1072#1085#1080#1077
+            Width = 455
+          end
+          item
+            Position = 1
+            Text = #1057#1090#1086#1080#1084#1086#1089#1090#1100
+            Width = 100
+          end>
+      end
+      object btnRootAdd: TButton
+        Left = 570
+        Top = 6
+        Width = 75
+        Height = 25
+        Action = ActRootAdd
+        Anchors = [akTop, akRight]
+        TabOrder = 1
+        ExplicitLeft = 566
+      end
+      object btnChildAdd: TButton
+        Left = 570
+        Top = 37
+        Width = 75
+        Height = 25
+        Action = ActChildAdd
+        Anchors = [akTop, akRight]
+        TabOrder = 2
+        ExplicitLeft = 566
+      end
+      object btnNodeEdt: TButton
+        Left = 570
+        Top = 68
+        Width = 75
+        Height = 25
+        Action = ActNodeEdt
+        Anchors = [akTop, akRight]
+        TabOrder = 3
+        ExplicitLeft = 566
+      end
+      object btnNodeDel: TButton
+        Left = 570
+        Top = 99
+        Width = 75
+        Height = 25
+        Action = ActNodeDel
+        Anchors = [akTop, akRight]
+        TabOrder = 4
+        ExplicitLeft = 566
+      end
     end
   end
   object tmpDB: TpFIBDatabase
@@ -211,20 +307,50 @@ object Form1: TForm1
       Category = 'price'
       Caption = '-'
     end
-    object ActNodeAdd: TAction
+    object ActRootAdd: TAction
       Category = 'Node'
-      Caption = 'ActNodeAdd'
-      OnExecute = ActNodeAddExecute
+      Caption = 'Add Root'
+      OnExecute = ActRootAddExecute
+    end
+    object ActChildAdd: TAction
+      Category = 'Node'
+      Caption = 'Add Child'
+      OnExecute = ActChildAddExecute
     end
     object ActNodeEdt: TAction
       Category = 'Node'
-      Caption = 'ActNodeEdt'
+      Caption = 'Node Edit'
       OnExecute = ActNodeEdtExecute
     end
     object ActNodeDel: TAction
       Category = 'Node'
-      Caption = 'ActNodeDel'
+      Caption = 'Node Del'
       OnExecute = ActNodeDelExecute
+    end
+    object ActNodeDataSave: TAction
+      Category = 'Node'
+      Caption = 'Save'
+      OnExecute = ActNodeDataSaveExecute
+    end
+    object ActNodeDataCancel: TAction
+      Category = 'Node'
+      Caption = 'Cancel'
+      OnExecute = ActNodeDataCancelExecute
+    end
+    object ActChkStatusBtn: TAction
+      Category = 'price'
+      Caption = 'ActChkStatusBtn'
+      OnExecute = ActChkStatusBtnExecute
+    end
+    object actEdtNodeDataOn: TAction
+      Category = 'price'
+      Caption = 'actEdtNodeDataOn'
+      OnExecute = actEdtNodeDataOnExecute
+    end
+    object actEdtNodeDataOff: TAction
+      Category = 'price'
+      Caption = 'actEdtNodeDataOff'
+      OnExecute = actEdtNodeDataOffExecute
     end
   end
   object mds_labor: TMemTableEh
