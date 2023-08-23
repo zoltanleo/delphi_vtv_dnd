@@ -1,32 +1,36 @@
 ﻿[Closed Files]
 File_0=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\SOURCE\VCL\Vcl.Controls.pas',0,1,1132,36,1153,0,0,,
-File_1=TSourceModule,'C:\Embarcadero\comp\VTV\Source\VirtualTrees.pas',0,1,222,1,241,0,0,,
-File_2=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\source\rtl\common\System.UITypes.pas',0,1,93,1,114,0,0,,
-File_3=TSourceModule,'C:\proj\test_delphi\db_test_2\Unit1.pas',0,1,79,58,766,0,0,{{131,0}
-File_4=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\SOURCE\RTL\SYS\System.pas',0,1,1,1,12,0,0,,
-File_5=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\SOURCE\RTL\SYS\System.SysUtils.pas',0,1,3418,53,3439,0,0,,
-File_6=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\SOURCE\VCL\Vcl.ComCtrls.pas',0,1,962,1,977,0,0,{{18131,0}
-File_7=TSourceModule,'C:\proj\test_delphi\db_test\Unit1.pas',0,1,260,15,259,0,0,{{104,0}
-File_8=TSourceModule,'C:\proj\test_delphi\delphi_mds_filter\Unit1.pas',0,1,98,65,113,0,0,,
-File_9=TSourceModule,'C:\Embarcadero\comp\fibplus\fib.pas',0,1,382,1,403,0,0,,
-File_10=TSourceModule,'C:\proj\armdoc_4\uFrmReportResearch.pas',0,1,364,1,379,0,0,,
-File_11=TSourceModule,'C:\Embarcadero\comp\fr_2023_1_3\Source\ExportPack\frxExportBaseDialog.pas',0,1,18,1,31,0,0,,
-File_12=TSourceModule,'C:\Embarcadero\comp\fr_2023_1_3\LibD28\fs_iilparser.pas',0,1,679,1,692,0,0,,
-File_13=TSourceModule,'C:\Embarcadero\comp\fr_2023_1_3\Source\frxDBSet.pas',0,1,195,1,208,0,0,,
-File_14=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\source\data\Data.DB.pas',0,1,3221,1,3234,0,0,,
+File_1=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\source\rtl\common\System.UITypes.pas',0,1,93,1,114,0,0,,
+File_2=TSourceModule,'C:\proj\test_delphi\db_test_2\Unit1.pas',0,1,79,58,766,0,0,{{131,0}
+File_3=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\SOURCE\RTL\SYS\System.pas',0,1,1,1,12,0,0,,
+File_4=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\SOURCE\RTL\SYS\System.SysUtils.pas',0,1,3418,53,3439,0,0,,
+File_5=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\SOURCE\VCL\Vcl.ComCtrls.pas',0,1,962,1,977,0,0,{{18131,0}
+File_6=TSourceModule,'C:\proj\test_delphi\db_test\Unit1.pas',0,1,260,15,259,0,0,{{104,0}
+File_7=TSourceModule,'C:\proj\test_delphi\delphi_mds_filter\Unit1.pas',0,1,98,65,113,0,0,,
+File_8=TSourceModule,'C:\Embarcadero\comp\fibplus\fib.pas',0,1,382,1,403,0,0,,
+File_9=TSourceModule,'C:\proj\armdoc_4\uFrmReportResearch.pas',0,1,364,1,379,0,0,,
+File_10=TSourceModule,'C:\Embarcadero\comp\fr_2023_1_3\Source\ExportPack\frxExportBaseDialog.pas',0,1,18,1,31,0,0,,
+File_11=TSourceModule,'C:\Embarcadero\comp\fr_2023_1_3\LibD28\fs_iilparser.pas',0,1,679,1,692,0,0,,
+File_12=TSourceModule,'C:\Embarcadero\comp\fr_2023_1_3\Source\frxDBSet.pas',0,1,195,1,208,0,0,,
+File_13=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\source\data\Data.DB.pas',0,1,3221,1,3234,0,0,,
 
 [Modules]
 Module0=C:\proj\test_delphi\delphi_vtv_dnd\Unit1.pas
-Count=1
+Module1=C:\Embarcadero\comp\VTV\Source\VirtualTrees.pas
+Count=2
 EditWindowCount=1
 
 [C:\proj\test_delphi\delphi_vtv_dnd\Unit1.pas]
 ModuleType=TSourceModule
 
+[C:\Embarcadero\comp\VTV\Source\VirtualTrees.pas]
+ModuleType=TSourceModule
+
 [EditWindow0]
-ViewCount=1
+ViewCount=2
 CurrentEditView=C:\proj\test_delphi\delphi_vtv_dnd\Unit1.pas
 View0=0
+View1=1
 PercentageSizes=1
 Create=1
 Visible=1
@@ -60,18 +64,32 @@ TabDockRightClients=DockSite2=0,DockSite4=1
 CustomEditViewType=TEditView
 Module=C:\proj\test_delphi\delphi_vtv_dnd\Unit1.pas
 CursorX=1
-CursorY=254
-TopLine=256
+CursorY=676
+TopLine=673
 LeftCol=1
-Elisions={{152,0},{225,11},{'report SQLText'}}{{724,0},{745,11},{'skiped'}}{{874,0},{894,11},{'skiped'}}
-Bookmarks={1,597,6}{2,342,1}{4,252,1}{5,296,1}{6,468,1}
+Elisions={{170,0},{243,11},{'report SQLText'}}{{829,0},{850,11},{'skiped'}}{{983,0},{1003,11},{'skiped'}}
+Bookmarks={0,678,21}{1,742,6}{2,473,1}{4,323,1}{5,254,1}{6,448,1}{7,598,10}{8,395,10}{9,1094,1}
 EditViewName=C:\proj\test_delphi\delphi_vtv_dnd\Unit1.pas
 
+[View1]
+CustomEditViewType=TEditView
+Module=C:\Embarcadero\comp\VTV\Source\VirtualTrees.pas
+CursorX=19
+CursorY=371
+TopLine=357
+LeftCol=1
+Elisions=
+Bookmarks=
+EditViewName=C:\Embarcadero\comp\VTV\Source\VirtualTrees.pas
+
 [Watches]
-Count=0
+Count=3
+Watch0='vst.SelectedCount',256,0,18,1,0,'Watches',1
+Watch1='Nodes[i]',256,0,18,1,0,'Watches',1
+Watch2='Data^.ChangeType',256,0,18,1,0,'Watches',1
 
 [WatchWindow]
-WatchColumnWidth=120
+WatchColumnWidth=209
 WatchShowColumnHeaders=1
 PercentageSizes=1
 Create=1
@@ -166,11 +184,11 @@ State=0
 Left=8
 Top=720
 Width=2767
-Height=1360
+Height=1772
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=2767
-ClientHeight=1360
+ClientHeight=1772
 TBDockHeight=1360
 LRDockWidth=2767
 Dockable=1
@@ -236,6 +254,11 @@ LRDockWidth=2160
 Dockable=1
 StayOnTop=0
 SplitPos=140
+
+[PropInspDesignerSelection]
+ArrangeBy=Name
+SelectedItem=Name,OnClose
+ExpandedItems=LiveBindings=0,"LiveBindings Designer=0",Margins=0,HorzScrollBar=0
 
 [DebugLogView]
 PercentageSizes=1
@@ -638,8 +661,8 @@ Create=1
 Visible=0
 Docked=1
 State=0
-Left=8
-Top=8
+Left=1059
+Top=125
 Width=1999
 Height=9011
 MaxLeft=-1

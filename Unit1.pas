@@ -13,12 +13,14 @@ uses
   ;
 
 type
+  TTreeChangeType = (tctNone, tctDeleted, tctInserted, tctUpdated);
 
   PMyRec = ^TMyRec;
   TMyRec = record
     PriceID: Integer;
-    LaborissueID: Integer;
-    IsModified: Boolean;
+    DepartID: Integer;
+    AutoincID: Integer;
+    ChangeType: TTreeChangeType;
     PriceName: string;
     PriceCost: Currency;
   end;
@@ -46,12 +48,6 @@ type
     btnPriceAdd: TButton;
     btnPriceDel: TButton;
     pnlEdtNodeData: TPanel;
-    edtPriceCost: TEdit;
-    udPriceCost: TUpDown;
-    edtPriceName: TEdit;
-    Label1: TLabel;
-    Button2: TButton;
-    Button3: TButton;
     ActNodeDataSave: TAction;
     ActNodeDataCancel: TAction;
     ActChkStatusBtn: TAction;
@@ -63,6 +59,16 @@ type
     btnChildAdd: TButton;
     btnNodeEdt: TButton;
     btnNodeDel: TButton;
+    pnlItemEdt: TPanel;
+    Button2: TButton;
+    Button3: TButton;
+    pnlEdtCost: TPanel;
+    edtPriceCost: TEdit;
+    udPriceCost: TUpDown;
+    pnlPriceNameEdt: TPanel;
+    edtPriceName: TEdit;
+    btnNodeRestore: TButton;
+    ActNodeRestore: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure cbbPriceChange(Sender: TObject);
@@ -83,8 +89,6 @@ type
       Shift: TShiftState; Pt: TPoint; var Effect: Integer; Mode: TDropMode);
     procedure vstAddToSelection(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure vstNodeClick(Sender: TBaseVirtualTree; const HitInfo: THitInfo);
-    procedure vstStartDrag(Sender: TObject; var DragObject: TDragObject);
-    procedure vstDragAllowed(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
     procedure ActNodeDelExecute(Sender: TObject);
     procedure edtPriceCostChange(Sender: TObject);
     procedure edtPriceCostKeyPress(Sender: TObject; var Key: Char);
@@ -93,12 +97,23 @@ type
     procedure ActChkStatusBtnExecute(Sender: TObject);
     procedure actEdtNodeDataOffExecute(Sender: TObject);
     procedure actEdtNodeDataOnExecute(Sender: TObject);
+    procedure vstInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode;
+      var InitialStates: TVirtualNodeInitStates);
+    procedure ActNodeRestoreExecute(Sender: TObject);
+    procedure vstPaintText(Sender: TBaseVirtualTree; const TargetCanvas: TCanvas; Node: PVirtualNode;
+      Column: TColumnIndex; TextType: TVSTTextType);
+    procedure vstRemoveFromSelection(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure ActChkStatusBtnUpdate(Sender: TObject);
   private
     FClinicID: Integer;
     FPeolpeID: Integer;
     FDoctorID: Integer;
     FPriceName: string;
     FFilterStr: string;
+    FAutoincrementID: Integer;
+    FTreeChangeType: TTreeChangeType;
+    FNodeSender: PVirtualNode;
     procedure FillCbbPrice(Sender: TObject);
   public
     property ClinicID: Integer read FClinicID;
@@ -106,6 +121,9 @@ type
     property DoctorID: Integer read FDoctorID;
     property PriceName: string read FPriceName write FPriceName;
     property FilterStr: string read FFilterStr;
+    property AutoincrementID: Integer read FAutoincrementID;
+    property TreeChangeType: TTreeChangeType read FTreeChangeType write FTreeChangeType;
+    property NodeSender: PVirtualNode read FNodeSender;
 //    procedure SetExpFN(Sender: TObject);
   end;
 
@@ -234,21 +252,145 @@ implementation
 procedure TForm1.ActRootAddExecute(Sender: TObject);
 begin
   actEdtNodeDataOnExecute(Sender);
+  pnlEdtCost.Visible:= False;
+  edtPriceName.Clear;
+  FNodeSender:= vst.GetFirstSelected;
+  if edtPriceName.CanFocus then edtPriceName.SetFocus;
 end;
 
 procedure TForm1.ActChkStatusBtnExecute(Sender: TObject);
 var
   NodeLvl: Integer;
+  Node: PVirtualNode;
   Nodes: TNodeArray;
+  Data: PMyRec;
   I: Integer;
 begin
+  if (csDestroying in  ComponentState) then Exit;
+
   ActNodeEdt.Enabled:= (vst.SelectedCount = 1);
   btnNodeEdt.Enabled:= ActNodeEdt.Enabled;
-  ActNodeDel.Enabled:= (vst.SelectedCount > 0);
-  btnNodeDel.Enabled:= ActNodeDel.Enabled;
 
-  ActChildAdd.Enabled:= (vst.RootNodeCount > 0);
+  ActChildAdd.Enabled:= ((vst.RootNodeCount > 0) and (vst.SelectedCount = 1));
   btnChildAdd.Enabled:= ActChildAdd.Enabled;
+
+  case vst.SelectedCount of
+    0:
+      begin
+        ActNodeDel.Enabled:= False;
+        ActNodeRestore.Enabled:= False;
+      end;
+    1:
+      begin
+        Data:= vst.GetNodeData(vst.GetFirstSelected);
+
+        if Assigned(Data) then
+        begin
+          ActNodeDel.Enabled:= (Data^.ChangeType <> tctDeleted);
+          ActNodeRestore.Enabled:= (Data^.ChangeType = tctDeleted);
+        end;
+      end;
+    else
+      begin
+        ActNodeDel.Enabled:= True;
+        ActNodeRestore.Enabled:= True;
+
+        Nodes:= vst.GetSortedSelection(True);
+
+        for i := 0 to Pred(System.Length(Nodes)) do
+        begin
+          Data:= vst.GetNodeData(Nodes[i]);
+          if Assigned(Data) then
+            if (Data^.ChangeType = tctDeleted) then
+            begin
+              ActNodeDel.Enabled:= False;
+              Break;
+            end;
+        end;
+
+        for i := 0 to Pred(System.Length(Nodes)) do
+        begin
+          Data:= vst.GetNodeData(Nodes[i]);
+          if Assigned(Data) then
+            if (Data^.ChangeType <> tctDeleted) then
+            begin
+              ActNodeRestore.Enabled:= False;
+              Break;
+            end;
+        end;
+
+      end;
+  end;
+
+  btnNodeDel.Enabled:= ActNodeDel.Enabled;
+  btnNodeRestore.Enabled:= ActNodeRestore.Enabled;
+end;
+
+procedure TForm1.ActChkStatusBtnUpdate(Sender: TObject);
+var
+  NodeLvl: Integer;
+  Node: PVirtualNode;
+  Nodes: TNodeArray;
+  Data: PMyRec;
+  I: Integer;
+begin
+  Exit;
+  ActNodeEdt.Enabled:= (vst.SelectedCount = 1);
+  btnNodeEdt.Enabled:= ActNodeEdt.Enabled;
+
+  ActChildAdd.Enabled:= ((vst.RootNodeCount > 0) and (vst.SelectedCount = 1));
+  btnChildAdd.Enabled:= ActChildAdd.Enabled;
+
+  case vst.SelectedCount of
+    0:
+      begin
+        ActNodeDel.Enabled:= False;
+        ActNodeRestore.Enabled:= False;
+      end;
+    1:
+      begin
+        Data:= vst.GetNodeData(vst.GetFirstSelected);
+
+        if Assigned(Data) then
+        begin
+          ActNodeDel.Enabled:= (Data^.ChangeType <> tctDeleted);
+          ActNodeRestore.Enabled:= (Data^.ChangeType = tctDeleted);
+        end;
+      end;
+    else
+      begin
+        ActNodeDel.Enabled:= True;
+        ActNodeRestore.Enabled:= True;
+
+        Nodes:= vst.GetSortedSelection(True);
+
+        for i := 0 to Pred(System.Length(Nodes)) do
+        begin
+          Data:= vst.GetNodeData(Nodes[i]);
+          if Assigned(Data) then
+            if (Data^.ChangeType = tctDeleted) then
+            begin
+              ActNodeDel.Enabled:= False;
+              Break;
+            end;
+        end;
+
+        for i := 0 to Pred(System.Length(Nodes)) do
+        begin
+          Data:= vst.GetNodeData(Nodes[i]);
+          if Assigned(Data) then
+            if (Data^.ChangeType <> tctDeleted) then
+            begin
+              ActNodeRestore.Enabled:= False;
+              Break;
+            end;
+        end;
+
+      end;
+  end;
+
+  btnNodeDel.Enabled:= ActNodeDel.Enabled;
+  btnNodeRestore.Enabled:= ActNodeRestore.Enabled;
 end;
 
 procedure TForm1.actEdtNodeDataOffExecute(Sender: TObject);
@@ -313,8 +455,47 @@ begin
 end;
 
 procedure TForm1.ActNodeDelExecute(Sender: TObject);
+var
+  Nodes: TNodeArray;
+  Data: PMyRec;
+  i: Integer;
+  chNode: PVirtualNode;
 begin
-//
+  if (vst.SelectedCount = 0) then Exit;
+
+  Nodes:= vst.GetSortedSelection(True);
+  for i := 0 to Pred(System.Length(Nodes)) do
+  begin
+    if (vst.GetNodeLevel(Nodes[i]) = 0)
+    then
+      begin
+        Data:= vst.GetNodeData(Nodes[i]);
+
+        if Assigned(Data) then
+        begin
+          Data^.ChangeType:= tctDeleted;
+          chNode:=  Nodes[i]^.FirstChild;
+
+          while not Assigned(chNode) do
+          begin
+            Data:= vst.GetNodeData(chNode);
+
+            if Assigned(Data) then
+            begin
+              Data.ChangeType:= tctDeleted;
+              chNode:= chNode.NextSibling;
+            end;
+          end;
+        end;
+      end
+    else
+      begin
+        Data:= vst.GetNodeData(Nodes[i]);
+        if Assigned(Data) then Data^.ChangeType:= tctDeleted;
+      end;
+  end;
+
+  vst.Refresh;
 end;
 
 procedure TForm1.ActNodeEdtExecute(Sender: TObject);
@@ -322,15 +503,34 @@ begin
   actEdtNodeDataOnExecute(Sender);
 end;
 
-procedure TForm1.ActChildAddExecute(Sender: TObject);
+procedure TForm1.ActNodeRestoreExecute(Sender: TObject);
 begin
+//
+end;
+
+procedure TForm1.ActChildAddExecute(Sender: TObject);
+var
+  tmpCurr: Currency;
+  fs: TFormatSettings;
+begin
+  fs:= TFormatSettings.Create;
   actEdtNodeDataOnExecute(Sender);
+  pnlEdtCost.Visible:= True;
+  edtPriceName.Clear;
+
+  if TryStrToCurr(edtPriceCost.Text, tmpCurr,fs)
+    then edtPriceCost.Text:= Format('%2.2f',[tmpCurr])
+    else edtPriceCost.Clear;
+
+  FNodeSender:= vst.GetFirstSelected;
+  if edtPriceName.CanFocus then edtPriceName.SetFocus;
 end;
 
 procedure TForm1.actPriceAddExecute(Sender: TObject);
 var
   Node, ChdNode: PVirtualNode;
   Data: PMyRec;
+  RootID: Integer;
 begin
   if not mds_price.Active then Exit;
 
@@ -385,12 +585,14 @@ begin
 
         Node:= vst.AddChild(nil);
         Data:= vst.GetNodeData(Node);
+        Inc(FAutoincrementID);
 
         if Assigned(Data) then
         begin
           Data^.PriceID:= mds_price.FieldByName('BASEPRICE_ID').AsInteger;
-          Data^.LaborissueID:= mds_price.FieldByName('LABORISSUE_ID').AsInteger;
-          Data^.IsModified:= True;
+          Data^.DepartID:= mds_price.FieldByName('LABORISSUE_ID').AsInteger;
+          Data^.AutoincID:= AutoincrementID;
+          Data^.ChangeType:= TreeChangeType;
           Data^.PriceName:= mds_price.FieldByName('LABORISSUE_NAME').AsString;
           Data^.PriceCost:= 0;
 
@@ -398,13 +600,17 @@ begin
           begin
             ChdNode:= vst.AddChild(Node);
             Data:= vst.GetNodeData(ChdNode);
+            Inc(FAutoincrementID);
 
             if Assigned(Data) then
+            begin
               Data^.PriceID:= mds_price.FieldByName('BASEPRICE_ID').AsInteger;
-              Data^.LaborissueID:= mds_price.FieldByName('LABORISSUE_ID').AsInteger;
-              Data^.IsModified:= True;
+              Data^.DepartID:= mds_price.FieldByName('LABORISSUE_ID').AsInteger;
+              Data^.AutoincID:= AutoincrementID;
+              Data^.ChangeType:= TreeChangeType;
               Data^.PriceName:= mds_price.FieldByName('BASEPRICE_PROC_NAME').AsString;
               Data^.PriceCost:= mds_price.FieldByName('COST_PROC_PRICE').AsCurrency;
+            end;
 
             mds_price.Next;
           end;
@@ -461,7 +667,7 @@ begin
   fs:= TFormatSettings.Create;
   if TryStrToCurr(edtPriceCost.Text, tmpCurr,fs) then
   begin
-    Label1.Caption:= Format('%2.2f',[tmpCurr]);
+//    Label1.Caption:= Format('%2.2f',[tmpCurr]);
 //    udPriceCost.Position:= Trunc(tmpCurr);
   end;
 
@@ -533,6 +739,11 @@ begin
   end;
 end;
 
+procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+//  vst.ClearSelection;
+end;
+
 procedure TForm1.FormCreate(Sender: TObject);
 var
   i: Integer;
@@ -553,6 +764,9 @@ begin
   FDoctorID:= -1;
   FPriceName:= '';
   FFilterStr:= '';
+  FAutoincrementID:= 0;
+  FTreeChangeType:= tctInserted;
+  FNodeSender:= nil;
 
   with mds_price do
   begin
@@ -662,48 +876,9 @@ begin
 end;
 
 procedure TForm1.vstAddToSelection(Sender: TBaseVirtualTree; Node: PVirtualNode);
-var
-  NodeLvl: Integer;
-  Nodes: TNodeArray;
-  i: Integer;
 begin
-//  case Sender.SelectedCount of
-//    0:
-//      begin
-//
-//      end;
-//    1:
-//      begin
-//        ActNodeDel.en
-//      end;
-//    else
-//      begin
-//        Nodes:= Sender.GetSortedSelection(True);
-//        for i := 0 to Pred(System.Length(Nodes)) do
-//        begin
-//          NodeLvl:= Sender.GetNodeLevel(Nodes[i]);
-//          case NodeLvl of
-//            0:
-//              begin
-////                act
-//              end;
-//            1:
-//              begin
-//
-//              end;
-//          end;
-//        end;
-//      end;
-//
-//  end;
-
   ActChkStatusBtnExecute(Sender);
-end;
-
-procedure TForm1.vstDragAllowed(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;
-  var Allowed: Boolean);
-begin
-//  Allowed:= True;
+//  ActChkStatusBtnUpdate(Sender);
 end;
 
 procedure TForm1.vstDragDrop(Sender: TBaseVirtualTree; Source: TObject; DataObject: IDataObject; Formats: TFormatArray;
@@ -851,7 +1026,11 @@ var
 begin
   Data:= Sender.GetNodeData(Node);
 
-  if Assigned(Data) then Finalize(Data^);
+  if Assigned(Data) then
+  begin
+
+    Finalize(Data^);
+  end;
 end;
 
 procedure TForm1.vstGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
@@ -907,6 +1086,12 @@ begin
   end;
 end;
 
+procedure TForm1.vstInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode;
+  var InitialStates: TVirtualNodeInitStates);
+begin
+//  Node.CheckType:= ctTriStateCheckBox;
+end;
+
 procedure TForm1.vstKeyPress(Sender: TObject; var Key: Char);
 var
   Node: PVirtualNode;
@@ -958,30 +1143,25 @@ begin
 //
 end;
 
-procedure TForm1.vstStartDrag(Sender: TObject; var DragObject: TDragObject);
+procedure TForm1.vstPaintText(Sender: TBaseVirtualTree; const TargetCanvas: TCanvas; Node: PVirtualNode;
+  Column: TColumnIndex; TextType: TVSTTextType);
 var
-  Node: PVirtualNode;
-  NodeLvl: Integer;
-  Nodes: TNodeArray;
-  i: Integer;
+  Data: PMyRec;
 begin
-//  if (vst.SelectedCount = 0) then Exit;
-//  Nodes:= vst.GetSortedSelection(True);
-//
-//  for i := 0 to Pred(System.Length(Nodes)) do
-//  begin
-//    if (Nodes[i].Parent = nil) then Exit;
-//  end;
+  Data:= Sender.GetNodeData(Node);
+
+  if Assigned(Data) then
+    if (Data^.ChangeType = tctDeleted) then
+    begin
+      TargetCanvas.Font.Style:= [TFontStyle.fsStrikeOut];
+      TargetCanvas.Font.Color:= clGrayText;
+    end;
 end;
 
-//procedure TForm1.SetExpFN(Sender: TObject);
-//begin
-//  if not TObject(Sender).InheritsFrom(TfrxBaseDialogExportFilter) then Exit;
-//
-//  if mds_info.Active then
-//    if not mds_info.IsEmpty then
-//      TfrxBaseDialogExportFilter(Sender).FileName:=
-//                repPath + mds_info.FieldByName('EXPORT_FN').AsString;
-//end;
+procedure TForm1.vstRemoveFromSelection(Sender: TBaseVirtualTree; Node: PVirtualNode);
+begin
+  ActChkStatusBtnExecute(Sender);
+//  ActChkStatusBtnUpdate(Sender);
+end;
 
 end.

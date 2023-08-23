@@ -10,6 +10,7 @@ object Form1: TForm1
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
+  OnClose = FormClose
   OnCreate = FormCreate
   OnShow = FormShow
   TextHeight = 15
@@ -86,105 +87,134 @@ object Form1: TForm1
     Align = alClient
     Caption = 'Panel3'
     TabOrder = 1
+    ExplicitWidth = 651
+    ExplicitHeight = 468
     object pnlEdtNodeData: TPanel
       Left = 1
       Top = 1
       Width = 653
-      Height = 56
+      Height = 41
       Align = alTop
       Caption = 'pnlEdtNodeData'
       TabOrder = 0
       ExplicitWidth = 649
-      DesignSize = (
-        653
-        56)
-      object Label1: TLabel
-        Left = 7
-        Top = 37
-        Width = 34
-        Height = 15
-        Caption = 'Label1'
-      end
-      object edtPriceCost: TEdit
-        Left = 329
-        Top = 8
-        Width = 121
-        Height = 23
-        Anchors = [akTop, akRight]
+      object pnlItemEdt: TPanel
+        Left = 480
+        Top = 1
+        Width = 172
+        Height = 39
+        Align = alRight
+        Caption = 'pnlItemEdt'
         TabOrder = 0
-        Text = '0'
-        OnChange = edtPriceCostChange
-        OnKeyPress = edtPriceCostKeyPress
-        ExplicitLeft = 325
+        ExplicitLeft = 476
+        DesignSize = (
+          172
+          39)
+        object Button2: TButton
+          Left = 8
+          Top = 7
+          Width = 75
+          Height = 25
+          Action = ActNodeDataSave
+          Anchors = [akTop, akRight]
+          TabOrder = 0
+        end
+        object Button3: TButton
+          Left = 89
+          Top = 7
+          Width = 75
+          Height = 25
+          Action = ActNodeDataCancel
+          Anchors = [akTop, akRight]
+          TabOrder = 1
+        end
       end
-      object udPriceCost: TUpDown
-        Left = 450
-        Top = 8
-        Width = 17
-        Height = 23
-        Anchors = [akTop, akRight]
-        Associate = edtPriceCost
-        DoubleBuffered = True
-        Max = 100000000
-        Increment = 50
-        ParentDoubleBuffered = False
+      object pnlEdtCost: TPanel
+        Left = 328
+        Top = 1
+        Width = 152
+        Height = 39
+        Align = alRight
+        Caption = 'pnlEdtCost'
         TabOrder = 1
-        Thousands = False
-        ExplicitLeft = 446
+        ExplicitLeft = 324
+        DesignSize = (
+          152
+          39)
+        object edtPriceCost: TEdit
+          Left = 3
+          Top = 7
+          Width = 121
+          Height = 23
+          Anchors = [akTop, akRight]
+          TabOrder = 0
+          Text = '0'
+          OnChange = edtPriceCostChange
+          OnKeyPress = edtPriceCostKeyPress
+        end
+        object udPriceCost: TUpDown
+          Left = 124
+          Top = 7
+          Width = 16
+          Height = 23
+          Anchors = [akTop, akRight]
+          Associate = edtPriceCost
+          DoubleBuffered = True
+          Max = 100000000
+          Increment = 50
+          ParentDoubleBuffered = False
+          TabOrder = 1
+          Thousands = False
+        end
       end
-      object edtPriceName: TEdit
-        Left = 7
-        Top = 8
-        Width = 316
-        Height = 23
-        Anchors = [akLeft, akTop, akRight]
+      object pnlPriceNameEdt: TPanel
+        Left = 1
+        Top = 1
+        Width = 327
+        Height = 39
+        Align = alClient
+        Caption = 'pnlPriceNameEdt'
         TabOrder = 2
-        Text = 'edtPriceName'
-        ExplicitWidth = 312
-      end
-      object Button2: TButton
-        Left = 490
-        Top = 8
-        Width = 75
-        Height = 25
-        Action = ActNodeDataSave
-        Anchors = [akTop, akRight]
-        TabOrder = 3
-        ExplicitLeft = 486
-      end
-      object Button3: TButton
-        Left = 571
-        Top = 7
-        Width = 75
-        Height = 25
-        Action = ActNodeDataCancel
-        Anchors = [akTop, akRight]
-        TabOrder = 4
-        ExplicitLeft = 567
+        ExplicitWidth = 323
+        DesignSize = (
+          327
+          39)
+        object edtPriceName: TEdit
+          Left = 7
+          Top = 8
+          Width = 314
+          Height = 23
+          Anchors = [akLeft, akTop, akRight]
+          TabOrder = 0
+          Text = 'edtPriceName'
+          ExplicitWidth = 310
+        end
       end
     end
     object pnlTreeView: TPanel
       Left = 1
-      Top = 57
+      Top = 42
       Width = 653
-      Height = 411
+      Height = 426
       Align = alClient
       Caption = 'pnlTreeView'
       TabOrder = 1
+      ExplicitWidth = 649
+      ExplicitHeight = 425
       DesignSize = (
         653
-        411)
+        426)
       object vst: TVirtualStringTree
         Left = 5
         Top = 6
         Width = 559
-        Height = 398
+        Height = 413
         Anchors = [akLeft, akTop, akRight, akBottom]
         DragMode = dmAutomatic
         DragOperations = [doCopy, doMove, doLink]
         Header.AutoSizeIndex = 0
         Header.Height = 20
-        Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowHint, hoShowImages, hoShowSortGlyphs, hoVisible, hoFullRepaintOnResize]
+        Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowHint, hoShowImages, hoShowSortGlyphs, hoVisible, hoAutoSpring, hoFullRepaintOnResize]
         HintMode = hmTooltip
         ParentShowHint = False
         ShowHint = True
@@ -193,17 +223,18 @@ object Form1: TForm1
         TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toWheelPanning, toEditOnClick]
         TreeOptions.SelectionOptions = [toExtendedFocus, toFullRowSelect, toLevelSelectConstraint, toMultiSelect, toSiblingSelectConstraint, toAlwaysSelectNode]
         OnAddToSelection = vstAddToSelection
-        OnDragAllowed = vstDragAllowed
         OnDragOver = vstDragOver
         OnDragDrop = vstDragDrop
         OnEditing = vstEditing
         OnFreeNode = vstFreeNode
         OnGetText = vstGetText
+        OnPaintText = vstPaintText
         OnGetNodeDataSize = vstGetNodeDataSize
+        OnInitNode = vstInitNode
         OnKeyPress = vstKeyPress
         OnNewText = vstNewText
         OnNodeClick = vstNodeClick
-        OnStartDrag = vstStartDrag
+        OnRemoveFromSelection = vstRemoveFromSelection
         Touch.InteractiveGestures = [igPan, igPressAndTap]
         Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
         Columns = <
@@ -256,6 +287,16 @@ object Form1: TForm1
         Action = ActNodeDel
         Anchors = [akTop, akRight]
         TabOrder = 4
+        ExplicitLeft = 566
+      end
+      object btnNodeRestore: TButton
+        Left = 570
+        Top = 130
+        Width = 75
+        Height = 25
+        Action = ActNodeRestore
+        Anchors = [akTop, akRight]
+        TabOrder = 5
         ExplicitLeft = 566
       end
     end
@@ -341,6 +382,7 @@ object Form1: TForm1
       Category = 'price'
       Caption = 'ActChkStatusBtn'
       OnExecute = ActChkStatusBtnExecute
+      OnUpdate = ActChkStatusBtnUpdate
     end
     object actEdtNodeDataOn: TAction
       Category = 'price'
@@ -351,6 +393,11 @@ object Form1: TForm1
       Category = 'price'
       Caption = 'actEdtNodeDataOff'
       OnExecute = actEdtNodeDataOffExecute
+    end
+    object ActNodeRestore: TAction
+      Category = 'Node'
+      Caption = 'Node Restore'
+      OnExecute = ActNodeRestoreExecute
     end
   end
   object mds_labor: TMemTableEh

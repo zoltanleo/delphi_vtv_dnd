@@ -1,32 +1,36 @@
 ﻿[Closed Files]
 File_0=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\SOURCE\VCL\Vcl.Controls.pas',0,1,1132,36,1153,0,0,,
-File_1=TSourceModule,'C:\Embarcadero\comp\VTV\Source\VirtualTrees.pas',0,1,222,1,241,0,0,,
-File_2=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\source\rtl\common\System.UITypes.pas',0,1,93,1,114,0,0,,
-File_3=TSourceModule,'C:\proj\test_delphi\db_test_2\Unit1.pas',0,1,79,58,766,0,0,{{131,0}
-File_4=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\SOURCE\RTL\SYS\System.pas',0,1,1,1,12,0,0,,
-File_5=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\SOURCE\RTL\SYS\System.SysUtils.pas',0,1,3418,53,3439,0,0,,
-File_6=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\SOURCE\VCL\Vcl.ComCtrls.pas',0,1,962,1,977,0,0,{{18131,0}
-File_7=TSourceModule,'C:\proj\test_delphi\db_test\Unit1.pas',0,1,260,15,259,0,0,{{104,0}
-File_8=TSourceModule,'C:\proj\test_delphi\delphi_mds_filter\Unit1.pas',0,1,98,65,113,0,0,,
-File_9=TSourceModule,'C:\Embarcadero\comp\fibplus\fib.pas',0,1,382,1,403,0,0,,
-File_10=TSourceModule,'C:\proj\armdoc_4\uFrmReportResearch.pas',0,1,364,1,379,0,0,,
-File_11=TSourceModule,'C:\Embarcadero\comp\fr_2023_1_3\Source\ExportPack\frxExportBaseDialog.pas',0,1,18,1,31,0,0,,
-File_12=TSourceModule,'C:\Embarcadero\comp\fr_2023_1_3\LibD28\fs_iilparser.pas',0,1,679,1,692,0,0,,
-File_13=TSourceModule,'C:\Embarcadero\comp\fr_2023_1_3\Source\frxDBSet.pas',0,1,195,1,208,0,0,,
-File_14=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\source\data\Data.DB.pas',0,1,3221,1,3234,0,0,,
+File_1=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\source\rtl\common\System.UITypes.pas',0,1,93,1,114,0,0,,
+File_2=TSourceModule,'C:\proj\test_delphi\db_test_2\Unit1.pas',0,1,79,58,766,0,0,{{131,0}
+File_3=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\SOURCE\RTL\SYS\System.pas',0,1,1,1,12,0,0,,
+File_4=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\SOURCE\RTL\SYS\System.SysUtils.pas',0,1,3418,53,3439,0,0,,
+File_5=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\SOURCE\VCL\Vcl.ComCtrls.pas',0,1,962,1,977,0,0,{{18131,0}
+File_6=TSourceModule,'C:\proj\test_delphi\db_test\Unit1.pas',0,1,260,15,259,0,0,{{104,0}
+File_7=TSourceModule,'C:\proj\test_delphi\delphi_mds_filter\Unit1.pas',0,1,98,65,113,0,0,,
+File_8=TSourceModule,'C:\Embarcadero\comp\fibplus\fib.pas',0,1,382,1,403,0,0,,
+File_9=TSourceModule,'C:\proj\armdoc_4\uFrmReportResearch.pas',0,1,364,1,379,0,0,,
+File_10=TSourceModule,'C:\Embarcadero\comp\fr_2023_1_3\Source\ExportPack\frxExportBaseDialog.pas',0,1,18,1,31,0,0,,
+File_11=TSourceModule,'C:\Embarcadero\comp\fr_2023_1_3\LibD28\fs_iilparser.pas',0,1,679,1,692,0,0,,
+File_12=TSourceModule,'C:\Embarcadero\comp\fr_2023_1_3\Source\frxDBSet.pas',0,1,195,1,208,0,0,,
+File_13=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\source\data\Data.DB.pas',0,1,3221,1,3234,0,0,,
 
 [Modules]
 Module0=C:\proj\test_delphi\delphi_vtv_dnd\Unit1.pas
-Count=1
+Module1=C:\Embarcadero\comp\VTV\Source\VirtualTrees.pas
+Count=2
 EditWindowCount=1
 
 [C:\proj\test_delphi\delphi_vtv_dnd\Unit1.pas]
 ModuleType=TSourceModule
 
+[C:\Embarcadero\comp\VTV\Source\VirtualTrees.pas]
+ModuleType=TSourceModule
+
 [EditWindow0]
-ViewCount=1
+ViewCount=2
 CurrentEditView=C:\proj\test_delphi\delphi_vtv_dnd\Unit1.pas
 View0=0
+View1=1
 PercentageSizes=1
 Create=1
 Visible=1
@@ -48,27 +52,37 @@ LeftPanelClients=PropertyInspector,DockSite3
 LeftPanelData=0000080001010000000028110000000000000170080000000000000100000000870A000009000000446F636B53697465330100000000841E00001100000050726F7065727479496E73706563746F72FFFFFFFF
 RightPanelSize=0
 BottomPanelSize=0
-BottomPanelClients=DockSite1
-BottomPanelData=0000080001000100000009000000446F636B5369746531AA44000000000000007606000000000000FFFFFFFF
 BottomMiddlePanelSize=0
 BottomMiddlePanelClients=DockSite0,GraphDrawingModel
 BottomMiddelPanelData=0000080001020200000009000000446F636B536974653010000000477261706844726177696E67566965779A1D00000000000002F806000000000000FFFFFFFF
-TabDockBottomClients=MessageView=0
+TabDockBottomClients=MessageView=0,DockSite1=1
 TabDockRightClients=DockSite2=0,DockSite4=1
 
 [View0]
 CustomEditViewType=TEditView
 Module=C:\proj\test_delphi\delphi_vtv_dnd\Unit1.pas
-CursorX=1
-CursorY=254
-TopLine=256
+CursorX=9
+CursorY=280
+TopLine=269
 LeftCol=1
-Elisions={{152,0},{225,11},{'report SQLText'}}{{724,0},{745,11},{'skiped'}}{{874,0},{894,11},{'skiped'}}
-Bookmarks={1,597,6}{2,342,1}{4,252,1}{5,296,1}{6,468,1}
+Elisions={{168,0},{241,11},{'report SQLText'}}{{789,0},{810,11},{'skiped'}}{{939,0},{959,11},{'skiped'}}
+Bookmarks={0,638,21}{1,702,6}{2,438,1}{4,285,1}{5,252,1}{6,413,1}{7,563,10}{8,360,10}{9,1045,1}
 EditViewName=C:\proj\test_delphi\delphi_vtv_dnd\Unit1.pas
 
+[View1]
+CustomEditViewType=TEditView
+Module=C:\Embarcadero\comp\VTV\Source\VirtualTrees.pas
+CursorX=19
+CursorY=371
+TopLine=357
+LeftCol=1
+Elisions=
+Bookmarks=
+EditViewName=C:\Embarcadero\comp\VTV\Source\VirtualTrees.pas
+
 [Watches]
-Count=0
+Count=1
+Watch0='edtPriceName.CanFocus',256,0,18,1,0,'Watches',1
 
 [WatchWindow]
 WatchColumnWidth=120
@@ -81,11 +95,11 @@ State=0
 Left=0
 Top=0
 Width=3821
-Height=1030
+Height=975
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=3821
-ClientHeight=1030
+ClientHeight=975
 TBDockHeight=220
 LRDockWidth=13602
 Dockable=1
@@ -164,7 +178,7 @@ Visible=0
 Docked=1
 State=0
 Left=8
-Top=720
+Top=696
 Width=2767
 Height=1772
 MaxLeft=-1
@@ -239,8 +253,8 @@ SplitPos=140
 
 [PropInspDesignerSelection]
 ArrangeBy=Name
-SelectedItem=Name,CustomHint
-ExpandedItems=Anchors=0,BorderIcons=0,Constraints=0,LiveBindings=0,"LiveBindings Designer=0",Margins=0,Action=1,Font=0,ImageMargins=0,StyleElements=0,Action.LiveBindings=0,"Action.LiveBindings Designer=0",BevelEdges=0,Padding=0
+SelectedItem=AccessibleName,OnPaintText
+ExpandedItems="LiveBindings Designer=0",Anchors=1,Constraints=0,Font=0,ImageMargins=0,LiveBindings=0,Margins=0,BevelEdges=0
 
 [DebugLogView]
 PercentageSizes=1
@@ -251,11 +265,11 @@ State=0
 Left=0
 Top=0
 Width=3821
-Height=1030
+Height=975
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=3821
-ClientHeight=1030
+ClientHeight=975
 TBDockHeight=412
 LRDockWidth=4949
 Dockable=1
@@ -270,11 +284,11 @@ State=0
 Left=0
 Top=0
 Width=3821
-Height=1030
+Height=975
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=3821
-ClientHeight=1030
+ClientHeight=975
 TBDockHeight=220
 LRDockWidth=7408
 Dockable=1
@@ -293,11 +307,11 @@ State=0
 Left=0
 Top=0
 Width=3821
-Height=1030
+Height=975
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=3821
-ClientHeight=1030
+ClientHeight=975
 TBDockHeight=1538
 LRDockWidth=3485
 Dockable=1
@@ -312,11 +326,11 @@ State=0
 Left=0
 Top=0
 Width=3821
-Height=1030
+Height=975
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=3821
-ClientHeight=1030
+ClientHeight=975
 TBDockHeight=2060
 LRDockWidth=3485
 Dockable=1
@@ -510,11 +524,11 @@ State=0
 Left=0
 Top=0
 Width=3821
-Height=1030
+Height=975
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=3821
-ClientHeight=1030
+ClientHeight=975
 TBDockHeight=1552
 LRDockWidth=8741
 Dockable=1
@@ -612,7 +626,7 @@ ActiveTabID=RefactoringForm
 TabDockClients=RefactoringForm,FindReferencsForm,ToDo List,MetricsView,QAView
 
 [DockSite1]
-HostDockSite=DockBottomPanel
+HostDockSite=BottomDockTabSet
 DockSiteType=1
 PercentageSizes=1
 Create=1
@@ -620,19 +634,19 @@ Visible=0
 Docked=1
 State=0
 Left=8
-Top=720
+Top=724
 Width=3821
-Height=1415
+Height=1360
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=3821
-ClientHeight=1415
-TBDockHeight=1415
+ClientHeight=1360
+TBDockHeight=1360
 LRDockWidth=3821
 Dockable=1
 StayOnTop=0
 TabPosition=1
-ActiveTabID=DebugLogView
+ActiveTabID=WatchWindow
 TabDockClients=DebugLogView,BreakpointWindow,ThreadStatusWindow,CallStackWindow,WatchWindow,LocalVarsWindow
 
 [DockSite2]
