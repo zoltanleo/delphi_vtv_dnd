@@ -2,6 +2,10 @@
 
 VTV Manipulation Project
 
+#### 1.0.4
+- implemented actions to remove/restore a node
+![](pict/vtv_dnd_04.gif)
+
 #### 1.0.3
 - implemented node editing actions
 ![](pict/vtv_dnd_03.gif)

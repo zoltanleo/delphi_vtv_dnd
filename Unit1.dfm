@@ -64,7 +64,7 @@ object Form1: TForm1
         Top = 8
         Width = 23
         Height = 23
-        Action = actPriceAdd
+        Action = actPriceFill
         Anchors = [akTop, akRight]
         TabOrder = 1
       end
@@ -87,8 +87,6 @@ object Form1: TForm1
     Align = alClient
     Caption = 'Panel3'
     TabOrder = 1
-    ExplicitWidth = 651
-    ExplicitHeight = 468
     object pnlEdtNodeData: TPanel
       Left = 1
       Top = 1
@@ -199,8 +197,6 @@ object Form1: TForm1
       Align = alClient
       Caption = 'pnlTreeView'
       TabOrder = 1
-      ExplicitWidth = 649
-      ExplicitHeight = 425
       DesignSize = (
         653
         426)
@@ -220,7 +216,7 @@ object Form1: TForm1
         ShowHint = True
         TabOrder = 0
         TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScrollOnExpand, toAutoSort, toAutoTristateTracking, toAutoChangeScale]
-        TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toWheelPanning, toEditOnClick]
+        TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toWheelPanning]
         TreeOptions.SelectionOptions = [toExtendedFocus, toFullRowSelect, toLevelSelectConstraint, toMultiSelect, toSiblingSelectConstraint, toAlwaysSelectNode]
         OnAddToSelection = vstAddToSelection
         OnDragOver = vstDragOver
@@ -339,10 +335,10 @@ object Form1: TForm1
   object actList: TActionList
     Left = 184
     Top = 80
-    object actPriceAdd: TAction
+    object actPriceFill: TAction
       Category = 'price'
       Caption = '+'
-      OnExecute = actPriceAddExecute
+      OnExecute = actPriceFillExecute
     end
     object actPriceDel: TAction
       Category = 'price'

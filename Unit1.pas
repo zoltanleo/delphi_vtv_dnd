@@ -14,15 +14,17 @@ uses
 
 type
   TTreeChangeType = (tctNone, tctDeleted, tctInserted, tctUpdated);
+  TEditMode = (emAdd, emEdit);
 
   PMyRec = ^TMyRec;
   TMyRec = record
     PriceID: Integer;
     DepartID: Integer;
-    AutoincID: Integer;
-    ChangeType: TTreeChangeType;
+    CurrentChangeType: TTreeChangeType;
+    LastChangeType: TTreeChangeType;
     PriceName: string;
-    PriceCost: Currency;
+    CurrentCost: Currency;
+    LastCost: Currency;
   end;
 
   TForm1 = class(TForm)
@@ -32,7 +34,7 @@ type
     ds_price: TDataSource;
     mds_price: TMemTableEh;
     actList: TActionList;
-    actPriceAdd: TAction;
+    actPriceFill: TAction;
     actPriceDel: TAction;
     mds_labor: TMemTableEh;
     mds_src: TMemTableEh;
@@ -76,7 +78,7 @@ type
     procedure vstFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure vstGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: string);
-    procedure actPriceAddExecute(Sender: TObject);
+    procedure actPriceFillExecute(Sender: TObject);
     procedure vstNewText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; NewText: string);
     procedure vstEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
     procedure vstKeyPress(Sender: TObject; var Key: Char);
@@ -111,9 +113,9 @@ type
     FDoctorID: Integer;
     FPriceName: string;
     FFilterStr: string;
-    FAutoincrementID: Integer;
     FTreeChangeType: TTreeChangeType;
     FNodeSender: PVirtualNode;
+    FEditMode: TEditMode;
     procedure FillCbbPrice(Sender: TObject);
   public
     property ClinicID: Integer read FClinicID;
@@ -121,10 +123,9 @@ type
     property DoctorID: Integer read FDoctorID;
     property PriceName: string read FPriceName write FPriceName;
     property FilterStr: string read FFilterStr;
-    property AutoincrementID: Integer read FAutoincrementID;
-    property TreeChangeType: TTreeChangeType read FTreeChangeType write FTreeChangeType;
+    property TreeChangeType: TTreeChangeType read FTreeChangeType;
     property NodeSender: PVirtualNode read FNodeSender;
-//    procedure SetExpFN(Sender: TObject);
+    property EditMode: TEditMode read FEditMode write FEditMode;
   end;
 
 const
@@ -286,8 +287,8 @@ begin
 
         if Assigned(Data) then
         begin
-          ActNodeDel.Enabled:= (Data^.ChangeType <> tctDeleted);
-          ActNodeRestore.Enabled:= (Data^.ChangeType = tctDeleted);
+          ActNodeDel.Enabled:= (Data^.CurrentChangeType <> tctDeleted);
+          ActNodeRestore.Enabled:= (Data^.CurrentChangeType = tctDeleted);
         end;
       end;
     else
@@ -301,7 +302,7 @@ begin
         begin
           Data:= vst.GetNodeData(Nodes[i]);
           if Assigned(Data) then
-            if (Data^.ChangeType = tctDeleted) then
+            if (Data^.CurrentChangeType = tctDeleted) then
             begin
               ActNodeDel.Enabled:= False;
               Break;
@@ -312,7 +313,7 @@ begin
         begin
           Data:= vst.GetNodeData(Nodes[i]);
           if Assigned(Data) then
-            if (Data^.ChangeType <> tctDeleted) then
+            if (Data^.CurrentChangeType <> tctDeleted) then
             begin
               ActNodeRestore.Enabled:= False;
               Break;
@@ -353,8 +354,8 @@ begin
 
         if Assigned(Data) then
         begin
-          ActNodeDel.Enabled:= (Data^.ChangeType <> tctDeleted);
-          ActNodeRestore.Enabled:= (Data^.ChangeType = tctDeleted);
+          ActNodeDel.Enabled:= (Data^.CurrentChangeType <> tctDeleted);
+          ActNodeRestore.Enabled:= (Data^.CurrentChangeType = tctDeleted);
         end;
       end;
     else
@@ -368,7 +369,7 @@ begin
         begin
           Data:= vst.GetNodeData(Nodes[i]);
           if Assigned(Data) then
-            if (Data^.ChangeType = tctDeleted) then
+            if (Data^.CurrentChangeType = tctDeleted) then
             begin
               ActNodeDel.Enabled:= False;
               Break;
@@ -379,7 +380,7 @@ begin
         begin
           Data:= vst.GetNodeData(Nodes[i]);
           if Assigned(Data) then
-            if (Data^.ChangeType <> tctDeleted) then
+            if (Data^.CurrentChangeType <> tctDeleted) then
             begin
               ActNodeRestore.Enabled:= False;
               Break;
@@ -460,10 +461,12 @@ var
   Data: PMyRec;
   i: Integer;
   chNode: PVirtualNode;
+  Nodelvl: Integer;
 begin
   if (vst.SelectedCount = 0) then Exit;
 
   Nodes:= vst.GetSortedSelection(True);
+
   for i := 0 to Pred(System.Length(Nodes)) do
   begin
     if (vst.GetNodeLevel(Nodes[i]) = 0)
@@ -473,17 +476,23 @@ begin
 
         if Assigned(Data) then
         begin
-          Data^.ChangeType:= tctDeleted;
-          chNode:=  Nodes[i]^.FirstChild;
+          Data^.LastChangeType:= Data^.CurrentChangeType;
+          Data^.CurrentChangeType:= tctDeleted;
 
-          while not Assigned(chNode) do
+          if (vsHasChildren in Nodes[i]^.States) then
           begin
-            Data:= vst.GetNodeData(chNode);
+            chNode:=  Nodes[i]^.FirstChild;
 
-            if Assigned(Data) then
+            while Assigned(chNode) do
             begin
-              Data.ChangeType:= tctDeleted;
-              chNode:= chNode.NextSibling;
+              Data:= vst.GetNodeData(chNode);
+
+              if Assigned(Data) then
+              begin
+                Data^.LastChangeType:= Data^.CurrentChangeType;
+                Data^.CurrentChangeType:= tctDeleted;
+                chNode:= chNode.NextSibling;
+              end;
             end;
           end;
         end;
@@ -491,11 +500,18 @@ begin
     else
       begin
         Data:= vst.GetNodeData(Nodes[i]);
-        if Assigned(Data) then Data^.ChangeType:= tctDeleted;
+        if Assigned(Data) then
+        begin
+          Data^.LastChangeType:= Data^.CurrentChangeType;
+          Data^.CurrentChangeType:= tctDeleted;
+        end;
       end;
   end;
 
   vst.Refresh;
+  if vst.CanFocus then vst.SetFocus;
+
+  ActChkStatusBtnExecute(Sender);
 end;
 
 procedure TForm1.ActNodeEdtExecute(Sender: TObject);
@@ -504,8 +520,64 @@ begin
 end;
 
 procedure TForm1.ActNodeRestoreExecute(Sender: TObject);
+var
+  Nodes: TNodeArray;
+  Data: PMyRec;
+  i: Integer;
+  chNode: PVirtualNode;
 begin
-//
+  if (vst.SelectedCount = 0) then Exit;
+
+  Nodes:= vst.GetSortedSelection(True);
+
+  for i := 0 to Pred(System.Length(Nodes)) do
+  begin
+    if (vst.GetNodeLevel(Nodes[i]) = 0)
+    then
+      begin
+        Data:= vst.GetNodeData(Nodes[i]);
+
+        if Assigned(Data) then
+        begin
+          Data^.CurrentChangeType:= Data^.LastChangeType;
+
+          if (vsHasChildren in Nodes[i]^.States) then
+          begin
+            chNode:=  Nodes[i]^.FirstChild;
+
+            while Assigned(chNode) do
+            begin
+              Data:= vst.GetNodeData(chNode);
+
+              if Assigned(Data) then
+              begin
+                Data^.CurrentChangeType:= Data^.LastChangeType;
+                chNode:= chNode.NextSibling;
+              end;
+            end;
+          end;
+        end;
+      end
+    else
+      begin
+        //check if there is a parent
+        if Assigned(Nodes[i].Parent) then
+        begin
+          Data:= vst.GetNodeData(Nodes[i].Parent);
+          if Assigned(Data) then
+            if (Data^.CurrentChangeType = tctDeleted)
+              then Data^.CurrentChangeType:= Data^.LastChangeType;
+        end;
+
+        Data:= vst.GetNodeData(Nodes[i]);
+        if Assigned(Data) then Data^.CurrentChangeType:= Data^.LastChangeType;
+      end;
+  end;
+
+  vst.Refresh;
+  if vst.CanFocus then vst.SetFocus;
+
+  ActChkStatusBtnExecute(Sender);
 end;
 
 procedure TForm1.ActChildAddExecute(Sender: TObject);
@@ -526,12 +598,15 @@ begin
   if edtPriceName.CanFocus then edtPriceName.SetFocus;
 end;
 
-procedure TForm1.actPriceAddExecute(Sender: TObject);
+procedure TForm1.actPriceFillExecute(Sender: TObject);
 var
   Node, ChdNode: PVirtualNode;
   Data: PMyRec;
-  RootID: Integer;
+  NodeID: integer;//ID of current Node
+  RootID: Integer;//parent ID of current Node
+
 begin
+  EditMode:= emAdd;
   if not mds_price.Active then Exit;
 
   try
@@ -585,31 +660,57 @@ begin
 
         Node:= vst.AddChild(nil);
         Data:= vst.GetNodeData(Node);
-        Inc(FAutoincrementID);
+
+        case EditMode of
+          emAdd:
+            begin
+              NodeID:= vst.AbsoluteIndex(Node);
+              RootID:= 0;
+              FTreeChangeType:= tctInserted;
+            end;
+          emEdit:
+            begin
+              NodeID:= mds_price.FieldByName('BASEPRICE_ID').AsInteger;
+              RootID:= mds_price.FieldByName('LABORISSUE_ID').AsInteger;
+              FTreeChangeType:= tctNone;
+            end;
+        end;
 
         if Assigned(Data) then
         begin
-          Data^.PriceID:= mds_price.FieldByName('BASEPRICE_ID').AsInteger;
-          Data^.DepartID:= mds_price.FieldByName('LABORISSUE_ID').AsInteger;
-          Data^.AutoincID:= AutoincrementID;
-          Data^.ChangeType:= TreeChangeType;
+//          Data^.PriceID:= mds_price.FieldByName('BASEPRICE_ID').AsInteger;
+//          Data^.DepartID:= mds_price.FieldByName('LABORISSUE_ID').AsInteger;
+          Data^.PriceID:= NodeID;
+          Data^.DepartID:= RootID;
+          Data^.CurrentChangeType:= TreeChangeType;
+          Data^.LastChangeType:= TreeChangeType;
           Data^.PriceName:= mds_price.FieldByName('LABORISSUE_NAME').AsString;
-          Data^.PriceCost:= 0;
+          Data^.CurrentCost:= 0;
+          Data^.LastCost:= 0;
+
+          RootID:= NodeID;
 
           while not mds_price.Eof do
           begin
             ChdNode:= vst.AddChild(Node);
             Data:= vst.GetNodeData(ChdNode);
-            Inc(FAutoincrementID);
+
+            case EditMode of
+              emAdd: NodeID:= vst.AbsoluteIndex(ChdNode);
+              emEdit: NodeID:= mds_price.FieldByName('BASEPRICE_ID').AsInteger;
+            end;
 
             if Assigned(Data) then
             begin
-              Data^.PriceID:= mds_price.FieldByName('BASEPRICE_ID').AsInteger;
-              Data^.DepartID:= mds_price.FieldByName('LABORISSUE_ID').AsInteger;
-              Data^.AutoincID:= AutoincrementID;
-              Data^.ChangeType:= TreeChangeType;
+//              Data^.PriceID:= mds_price.FieldByName('BASEPRICE_ID').AsInteger;
+//              Data^.DepartID:= mds_price.FieldByName('LABORISSUE_ID').AsInteger;
+              Data^.PriceID:= NodeID;
+              Data^.DepartID:= RootID;
+              Data^.CurrentChangeType:= TreeChangeType;
+              Data^.LastChangeType:= TreeChangeType;
               Data^.PriceName:= mds_price.FieldByName('BASEPRICE_PROC_NAME').AsString;
-              Data^.PriceCost:= mds_price.FieldByName('COST_PROC_PRICE').AsCurrency;
+              Data^.CurrentCost:= mds_price.FieldByName('COST_PROC_PRICE').AsCurrency;
+              Data^.LastCost:= mds_price.FieldByName('COST_PROC_PRICE').AsCurrency;
             end;
 
             mds_price.Next;
@@ -764,9 +865,10 @@ begin
   FDoctorID:= -1;
   FPriceName:= '';
   FFilterStr:= '';
-  FAutoincrementID:= 0;
   FTreeChangeType:= tctInserted;
   FNodeSender:= nil;
+  EditMode:= emAdd;
+
 
   with mds_price do
   begin
@@ -860,7 +962,7 @@ begin
       FillCbbPrice(Sender);
       cbbPriceChange(Sender);
       pnlTblPrice.Visible:= False;
-      actPriceAddExecute(Sender);
+      actPriceFillExecute(Sender);
       vst.FullExpand(nil);
       actEdtNodeDataOffExecute(Sender);
     except
@@ -876,9 +978,29 @@ begin
 end;
 
 procedure TForm1.vstAddToSelection(Sender: TBaseVirtualTree; Node: PVirtualNode);
+var
+  Data: PMyRec;
+  ss: string;
 begin
   ActChkStatusBtnExecute(Sender);
-//  ActChkStatusBtnUpdate(Sender);
+
+  Data:= Sender.GetNodeData(Node);
+  if Assigned(Data) then
+  begin
+    case TreeChangeType of
+      tctNone: ss:= 'tctNone';
+      tctDeleted: ss:= 'tctDeleted';
+      tctInserted: ss:= 'tctInserted';
+      tctUpdated: ss:= 'tctUpdated';
+    end;
+
+    Self.Caption:= Format('PriceID: %d | DepartID: %d | PriceName: %s, ChangeType: %s',[
+      Data^.PriceID,
+      Data^.DepartID,
+      Data^.PriceName,
+      ss
+                            ]);
+  end;
 end;
 
 procedure TForm1.vstDragDrop(Sender: TBaseVirtualTree; Source: TObject; DataObject: IDataObject; Formats: TFormatArray;
@@ -927,8 +1049,8 @@ begin
     dmNowhere: attMode := amNoWhere;
     dmAbove:
       begin
-        Data:=Sender.GetNodeData(pTarget);
-        Self.Caption:= Self.Caption + ' | ' + Data^.PriceName + ' | index = ' + IntToStr(pTarget^.Index);
+//        Data:=Sender.GetNodeData(pTarget);
+//        Self.Caption:= Self.Caption + ' | ' + Data^.PriceName + ' | index = ' + IntToStr(pTarget^.Index);
         NodeLvl:= Sender.GetNodeLevel(pTarget);
 
         case NodeLvl of
@@ -1081,7 +1203,7 @@ begin
     1:
       case Column of
         0: CellText:= Data^.PriceName;
-        1: CellText:= Format('%2.2f %s',[Data^.PriceCost, fs.CurrencyString]);
+        1: CellText:= Format('%2.2f %s',[Data^.CurrentCost, fs.CurrencyString]);
       end;
   end;
 end;
@@ -1114,28 +1236,28 @@ var
   NodeLvl: Integer;
   fs: TFormatSettings;
 begin
-  if (Trim(NewText) = '') then Exit;
-
-  Data:= Sender.GetNodeData(Node);
-  NodeLvl:= Sender.GetNodeLevel(Node);
-  fs:= TFormatSettings.Create;
-
-  case NodeLvl of
-    0:
-      case Column of
-        0: Data^.PriceName:= NewText;
-//        1: Exit;
-      end;
-    1:
-      case Column of
-        0: Data^.PriceName:= NewText;
-        1:
-          begin
-            NewText:= StringReplace(NewText,'.',',',[rfReplaceAll, rfIgnoreCase]);
-            Data^.PriceCost:= StrToCurr(NewText, fs);
-          end;
-      end;
-  end;
+//  if (Trim(NewText) = '') then Exit;
+//
+//  Data:= Sender.GetNodeData(Node);
+//  NodeLvl:= Sender.GetNodeLevel(Node);
+//  fs:= TFormatSettings.Create;
+//
+//  case NodeLvl of
+//    0:
+//      case Column of
+//        0: Data^.PriceName:= NewText;
+////        1: Exit;
+//      end;
+//    1:
+//      case Column of
+//        0: Data^.PriceName:= NewText;
+//        1:
+//          begin
+//            NewText:= StringReplace(NewText,'.',',',[rfReplaceAll, rfIgnoreCase]);
+//            Data^.CurrentCost:= StrToCurr(NewText, fs);
+//          end;
+//      end;
+//  end;
 end;
 
 procedure TForm1.vstNodeClick(Sender: TBaseVirtualTree; const HitInfo: THitInfo);
@@ -1151,7 +1273,7 @@ begin
   Data:= Sender.GetNodeData(Node);
 
   if Assigned(Data) then
-    if (Data^.ChangeType = tctDeleted) then
+    if (Data^.CurrentChangeType = tctDeleted) then
     begin
       TargetCanvas.Font.Style:= [TFontStyle.fsStrikeOut];
       TargetCanvas.Font.Color:= clGrayText;
