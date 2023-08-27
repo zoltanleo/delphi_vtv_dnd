@@ -87,6 +87,8 @@ object Form1: TForm1
     Align = alClient
     Caption = 'Panel3'
     TabOrder = 1
+    ExplicitWidth = 651
+    ExplicitHeight = 468
     object pnlEdtNodeData: TPanel
       Left = 1
       Top = 1
@@ -197,6 +199,8 @@ object Form1: TForm1
       Align = alClient
       Caption = 'pnlTreeView'
       TabOrder = 1
+      ExplicitWidth = 649
+      ExplicitHeight = 425
       DesignSize = (
         653
         426)

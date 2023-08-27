@@ -6,9 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, MemTableDataEh, Data.DB, MemTableEh, DBGridEhGrouping,
   ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh, FIBQuery, pFIBQuery, FIBDatabase, pFIBDatabase, EhLibVCL, GridsEh,
-  DBAxisGridsEh, DBGridEh, fib, Vcl.ComCtrls
-  , VirtualTrees, Vcl.ExtCtrls, System.Actions
-  , Vcl.ActnList
+  DBAxisGridsEh, DBGridEh, fib, Vcl.ComCtrls, VirtualTrees, Vcl.ExtCtrls, System.Actions, Vcl.ActnList
   , Winapi.ActiveX, Vcl.Samples.Spin
   ;
 
@@ -256,6 +254,7 @@ begin
   pnlEdtCost.Visible:= False;
   edtPriceName.Clear;
   FNodeSender:= vst.GetFirstSelected;
+  FTreeChangeType:= tctInserted;
   if edtPriceName.CanFocus then edtPriceName.SetFocus;
 end;
 
@@ -267,13 +266,11 @@ var
   Data: PMyRec;
   I: Integer;
 begin
-  if (csDestroying in  ComponentState) then Exit;
+  if (csDestroying in ComponentState) then Exit;
 
-  ActNodeEdt.Enabled:= (vst.SelectedCount = 1);
-  btnNodeEdt.Enabled:= ActNodeEdt.Enabled;
-
-  ActChildAdd.Enabled:= ((vst.RootNodeCount > 0) and (vst.SelectedCount = 1));
-  btnChildAdd.Enabled:= ActChildAdd.Enabled;
+  ActNodeEdt.Enabled:= False;
+//  ActChildAdd.Enabled:= ((vst.RootNodeCount > 0) and (vst.SelectedCount = 1));
+  ActChildAdd.Enabled:= False;
 
   case vst.SelectedCount of
     0:
@@ -289,6 +286,12 @@ begin
         begin
           ActNodeDel.Enabled:= (Data^.CurrentChangeType <> tctDeleted);
           ActNodeRestore.Enabled:= (Data^.CurrentChangeType = tctDeleted);
+          ActNodeEdt.Enabled:= (Data^.CurrentChangeType <> tctDeleted);
+
+          NodeLvl:= vst.GetNodeLevel(vst.GetFirstSelected);
+
+          if (NodeLvl = 1) then Data:= vst.GetNodeData(vst.GetFirstSelected.Parent);
+          ActChildAdd.Enabled:= ((vst.RootNodeCount > 0) and (Data^.CurrentChangeType <> tctDeleted));
         end;
       end;
     else
@@ -319,10 +322,11 @@ begin
               Break;
             end;
         end;
-
       end;
   end;
 
+  btnChildAdd.Enabled:= ActChildAdd.Enabled;
+  btnNodeEdt.Enabled:= ActNodeEdt.Enabled;
   btnNodeDel.Enabled:= ActNodeDel.Enabled;
   btnNodeRestore.Enabled:= ActNodeRestore.Enabled;
 end;
@@ -451,8 +455,88 @@ begin
 end;
 
 procedure TForm1.ActNodeDataSaveExecute(Sender: TObject);
+var
+  NodeLvl: Integer;
+  Node: PVirtualNode;
+  Data: PMyRec;
+//  bb: Boolean;
+//  ss: string;
+//  aa: Integer;
+  tmpCurr: Currency;
+  fs: TFormatSettings;
 begin
+  if (Trim(edtPriceName.Text) = '') then
+  begin
+    Application.MessageBox('Поле не может быть пустым!','Некорректные данные',MB_ICONINFORMATION);
+    if edtPriceName.CanFocus then edtPriceName.SetFocus;
+    Exit;
+  end;
+
+//  bb:= False;
+//  bb:= mds_labor.Locate('LABORISSUE_NAME',Trim(edtPriceName.Text),[loCaseInsensitive]);
+//  ss:= UpperCase(mds_labor.FieldByName('LABORISSUE_NAME').AsString,loUserLocale);//worked
+//  ss:= UpperCase(mds_labor.FieldByName('LABORISSUE_NAME').AsString,loInvariantLocale);//not worked
+//  ss:= UpperCase(Trim(edtPriceName.Text), loUserLocale);//worked
+//  aa:= CompareText(mds_labor.FieldByName('LABORISSUE_NAME').AsString,Trim(edtPriceName.Text));// <> 0 --> not worked
+//  aa:= CompareText(mds_labor.FieldByName('LABORISSUE_NAME').AsString,Trim(edtPriceName.Text), loUserLocale); = 0 --> worked
+
+  if mds_labor.Locate('LABORISSUE_NAME',Trim(edtPriceName.Text),[loCaseInsensitive]) then
+    if (CompareText(mds_labor.FieldByName('LABORISSUE_NAME').AsString,Trim(edtPriceName.Text), loUserLocale) = 0) then
+    begin
+      Application.MessageBox('В базе данных уже есть раздел с таким названием!','Некорректные данные',MB_ICONINFORMATION);
+      if edtPriceName.CanFocus then edtPriceName.SetFocus;
+      Exit
+    end;
+
+  NodeLvl:= vst.GetNodeLevel(NodeSender);
+
+  case NodeLvl of
+    0: Node:= vst.AddChild(nil);
+    1: Node:= vst.InsertNode(NodeSender,amInsertAfter);
+  end;
+
+  Data:= vst.GetNodeData(Node);
+  if Assigned(Data) then
+  begin
+    Data.PriceID:= vst.AbsoluteIndex(Node);
+    Data.DepartID:= 0;
+    Data.PriceName:= Trim(edtPriceName.Text);
+
+    case EditMode of
+      emAdd:
+        begin
+          Data.CurrentChangeType:= tctInserted;
+          Data.LastChangeType:= tctInserted;
+        end;
+      emEdit:
+        begin
+          Data.CurrentChangeType:= tctUpdated;
+          Data.LastChangeType:= tctNone;
+        end;
+    end;
+
+    Data.CurrentCost:= 0;
+    Data.LastCost:= 0;
+
+    if (NodeLvl = 1) then
+    begin
+      fs:= TFormatSettings.Create;
+      if TryStrToCurr(edtPriceCost.Text, tmpCurr,fs) then
+      begin
+        Data.CurrentCost:= tmpCurr;
+        Data.LastCost:= tmpCurr;
+      end;
+    end;
+  end;
+
+  vst.Refresh;
   actEdtNodeDataOffExecute(Sender);
+  vst.ClearSelection;
+  vst.ScrollIntoView(Node,True,False);
+  vst.Selected[Node]:= True;
+  if vst.CanFocus then vst.SetFocus;
+
+  ActChkStatusBtnExecute(Sender);
 end;
 
 procedure TForm1.ActNodeDelExecute(Sender: TObject);
@@ -515,8 +599,29 @@ begin
 end;
 
 procedure TForm1.ActNodeEdtExecute(Sender: TObject);
+var
+  tmpCurr: Currency;
+  fs: TFormatSettings;
+  Data: PMyRec;
+  NodeLvl: Integer;
 begin
+  FNodeSender:= vst.GetFirstSelected;
+
+  NodeLvl:= vst.GetNodeLevel(FNodeSender);
+  pnlEdtCost.Visible:= (NodeLvl = 1);
+
+  Data:= vst.GetNodeData(FNodeSender);
+
+  if not Assigned(Data) then Exit;
   actEdtNodeDataOnExecute(Sender);
+
+  edtPriceName.Text:= Data^.PriceName;
+
+  if (NodeLvl = 1) then
+  begin
+    fs:= TFormatSettings.Create;
+    edtPriceCost.Text:= Format('%2.2f',[Data^.CurrentCost]);
+  end;
 end;
 
 procedure TForm1.ActNodeRestoreExecute(Sender: TObject);
@@ -589,12 +694,17 @@ begin
   actEdtNodeDataOnExecute(Sender);
   pnlEdtCost.Visible:= True;
   edtPriceName.Clear;
+  edtPriceCost.Text:= '0';
 
   if TryStrToCurr(edtPriceCost.Text, tmpCurr,fs)
     then edtPriceCost.Text:= Format('%2.2f',[tmpCurr])
     else edtPriceCost.Clear;
 
-  FNodeSender:= vst.GetFirstSelected;
+  case vst.GetNodeLevel(vst.GetFirstSelected) of
+    0: FNodeSender:= vst.GetLastChild(vst.GetFirstSelected);
+    1: FNodeSender:= vst.GetFirstSelected;
+  end;
+
   if edtPriceName.CanFocus then edtPriceName.SetFocus;
 end;
 
@@ -678,8 +788,6 @@ begin
 
         if Assigned(Data) then
         begin
-//          Data^.PriceID:= mds_price.FieldByName('BASEPRICE_ID').AsInteger;
-//          Data^.DepartID:= mds_price.FieldByName('LABORISSUE_ID').AsInteger;
           Data^.PriceID:= NodeID;
           Data^.DepartID:= RootID;
           Data^.CurrentChangeType:= TreeChangeType;
@@ -702,8 +810,6 @@ begin
 
             if Assigned(Data) then
             begin
-//              Data^.PriceID:= mds_price.FieldByName('BASEPRICE_ID').AsInteger;
-//              Data^.DepartID:= mds_price.FieldByName('LABORISSUE_ID').AsInteger;
               Data^.PriceID:= NodeID;
               Data^.DepartID:= RootID;
               Data^.CurrentChangeType:= TreeChangeType;
@@ -868,6 +974,7 @@ begin
   FTreeChangeType:= tctInserted;
   FNodeSender:= nil;
   EditMode:= emAdd;
+  edtPriceName.MaxLength:= 100;
 
 
   with mds_price do

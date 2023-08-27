@@ -63,30 +63,29 @@ TabDockRightClients=DockSite2=0,DockSite4=1
 [View0]
 CustomEditViewType=TEditView
 Module=C:\proj\test_delphi\delphi_vtv_dnd\Unit1.pas
-CursorX=1
-CursorY=1167
-TopLine=1086
+CursorX=9
+CursorY=459
+TopLine=452
 LeftCol=1
-Elisions={{170,0},{243,11},{'report SQLText'}}{{899,0},{920,11},{'skiped'}}{{1053,0},{1073,11},{'skiped'}}
-Bookmarks={0,747,21}{1,811,6}{2,394,1}{3,271,1}{4,325,1}{5,254,1}{6,517,1}{7,667,10}{8,464,10}{9,1165,1}
+Elisions={{169,0},{242,11},{'report SQLText'}}{{1043,0},{1064,11},{'skiped'}}{{1197,0},{1217,11},{'skiped'}}
+Bookmarks={0,870,21}{1,935,6}{2,702,14}{3,271,1}{4,325,1}{5,253,1}{6,611,1}{7,488,1}{8,603,1}{9,1007,1}
 EditViewName=C:\proj\test_delphi\delphi_vtv_dnd\Unit1.pas
 
 [View1]
 CustomEditViewType=TEditView
 Module=C:\Embarcadero\comp\VTV\Source\VirtualTrees.pas
-CursorX=19
-CursorY=371
-TopLine=357
+CursorX=1
+CursorY=222
+TopLine=209
 LeftCol=1
 Elisions=
 Bookmarks=
 EditViewName=C:\Embarcadero\comp\VTV\Source\VirtualTrees.pas
 
 [Watches]
-Count=3
-Watch0='vst.SelectedCount',256,0,18,1,0,'Watches',1
-Watch1='Nodes[i]',256,0,18,1,0,'Watches',1
-Watch2='Data^.ChangeType',256,0,18,1,0,'Watches',1
+Count=2
+Watch0='Nodes[i]',256,0,18,1,0,'Watches',1
+Watch1='Nodelvl',256,0,18,1,0,'Watches',1
 
 [WatchWindow]
 WatchColumnWidth=120
@@ -165,11 +164,11 @@ State=0
 Left=0
 Top=0
 Width=1999
-Height=8626
+Height=7445
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=1999
-ClientHeight=8626
+ClientHeight=7445
 TBDockHeight=5907
 LRDockWidth=2350
 Dockable=1
@@ -254,11 +253,6 @@ LRDockWidth=2160
 Dockable=1
 StayOnTop=0
 SplitPos=140
-
-[PropInspDesignerSelection]
-ArrangeBy=Name
-SelectedItem=AutoCheck,OnRemoveFromSelection
-ExpandedItems=Anchors=0,BorderIcons=0,"LiveBindings Designer=0",LiveBindings=0
 
 [DebugLogView]
 PercentageSizes=1
@@ -661,14 +655,14 @@ Create=1
 Visible=0
 Docked=1
 State=0
-Left=8
-Top=8
+Left=4
+Top=29
 Width=1999
-Height=9011
+Height=7830
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=1999
-ClientHeight=9011
+ClientHeight=7830
 TBDockHeight=9011
 LRDockWidth=1999
 Dockable=1
