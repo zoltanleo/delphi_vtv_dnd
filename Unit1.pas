@@ -7,7 +7,7 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, MemTableDataEh, Data.DB, MemTableEh, DBGridEhGrouping,
   ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh, FIBQuery, pFIBQuery, FIBDatabase, pFIBDatabase, EhLibVCL, GridsEh,
   DBAxisGridsEh, DBGridEh, fib, Vcl.ComCtrls, VirtualTrees, Vcl.ExtCtrls, System.Actions, Vcl.ActnList
-  , Winapi.ActiveX, Vcl.Samples.Spin
+  , Winapi.ActiveX, Vcl.Samples.Spin, Vcl.Menus
   ;
 
 type
@@ -69,6 +69,17 @@ type
     edtPriceName: TEdit;
     btnNodeRestore: TButton;
     ActNodeRestore: TAction;
+    ppmVST: TPopupMenu;
+    actAllExpand: TAction;
+    actAllCollaps: TAction;
+    actNodeCollaps: TAction;
+    actNodeExpand: TAction;
+    ActChkStatusMnuVST: TAction;
+    N1: TMenuItem;
+    Expandallnodes1: TMenuItem;
+    Collapsallnodes1: TMenuItem;
+    Expandrootnode1: TMenuItem;
+    Collapsrootnode1: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure cbbPriceChange(Sender: TObject);
@@ -105,6 +116,13 @@ type
     procedure vstRemoveFromSelection(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure ActChkStatusBtnUpdate(Sender: TObject);
+    procedure actAllExpandExecute(Sender: TObject);
+    procedure actAllCollapsExecute(Sender: TObject);
+    procedure actNodeCollapsExecute(Sender: TObject);
+    procedure actNodeExpandExecute(Sender: TObject);
+    procedure ActChkStatusMnuVSTExecute(Sender: TObject);
+    procedure vstCollapsed(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure vstExpanded(Sender: TBaseVirtualTree; Node: PVirtualNode);
   private
     FClinicID: Integer;
     FPeolpeID: Integer;
@@ -398,6 +416,22 @@ begin
   btnNodeRestore.Enabled:= ActNodeRestore.Enabled;
 end;
 
+procedure TForm1.ActChkStatusMnuVSTExecute(Sender: TObject);
+var
+  Node: PVirtualNode;
+  NodeLvl: Integer;
+begin
+  Node:= vst.GetFirstSelected(True);
+
+  if not Assigned(node) then Exit;
+  NodeLvl:= vst.GetNodeLevel(Node);
+
+  if (NodeLvl > 0) then Node:= Node.Parent;
+
+  actNodeCollaps.Enabled:= ((vst.SelectedCount = 1) and (vsExpanded in Node^.States));
+  actNodeExpand.Enabled:= ((vst.SelectedCount = 1) and not (vsExpanded in Node^.States));
+end;
+
 procedure TForm1.actEdtNodeDataOffExecute(Sender: TObject);
 var
   i: Integer;
@@ -447,6 +481,21 @@ begin
   ActChildAdd.Enabled:= not EditMode;
   ActNodeEdt.Enabled:= not EditMode;
   ActNodeDel.Enabled:= not EditMode;
+end;
+
+procedure TForm1.actNodeCollapsExecute(Sender: TObject);
+var
+  NodeLvl: Integer;
+  Node: PVirtualNode;
+begin
+  if (vst.SelectedCount <> 1) then Exit;
+
+  Node:= vst.GetFirstSelected;
+  if not Assigned(Node) then Exit;
+  NodeLvl:= vst.GetNodeLevel(Node);
+
+  if (NodeLvl <> 0) then Node:= Node.Parent;
+  vst.Expanded[Node]:= False;
 end;
 
 procedure TForm1.ActNodeDataCancelExecute(Sender: TObject);
@@ -624,6 +673,21 @@ begin
   end;
 end;
 
+procedure TForm1.actNodeExpandExecute(Sender: TObject);
+var
+  NodeLvl: Integer;
+  Node: PVirtualNode;
+begin
+  if (vst.SelectedCount <> 1) then Exit;
+
+  Node:= vst.GetFirstSelected;
+  if not Assigned(Node) then Exit;
+  NodeLvl:= vst.GetNodeLevel(Node);
+
+  if (NodeLvl <> 0) then Node:= Node.Parent;
+  vst.Expanded[Node]:= True;
+end;
+
 procedure TForm1.ActNodeRestoreExecute(Sender: TObject);
 var
   Nodes: TNodeArray;
@@ -683,6 +747,16 @@ begin
   if vst.CanFocus then vst.SetFocus;
 
   ActChkStatusBtnExecute(Sender);
+end;
+
+procedure TForm1.actAllCollapsExecute(Sender: TObject);
+begin
+  vst.FullCollapse(nil);
+end;
+
+procedure TForm1.actAllExpandExecute(Sender: TObject);
+begin
+  vst.FullExpand(nil);
 end;
 
 procedure TForm1.ActChildAddExecute(Sender: TObject);
@@ -1087,10 +1161,8 @@ end;
 procedure TForm1.vstAddToSelection(Sender: TBaseVirtualTree; Node: PVirtualNode);
 var
   Data: PMyRec;
-  ss: string;
+  ss, ss1: string;
 begin
-  ActChkStatusBtnExecute(Sender);
-
   Data:= Sender.GetNodeData(Node);
   if Assigned(Data) then
   begin
@@ -1101,13 +1173,30 @@ begin
       tctUpdated: ss:= 'tctUpdated';
     end;
 
-    Self.Caption:= Format('PriceID: %d | DepartID: %d | PriceName: %s, ChangeType: %s',[
+    if Sender.Expanded[node]
+      then ss1:= 'Expanded[node] = True'
+      else ss1:= 'Expanded[node] = False';
+
+
+    Self.Caption:= Format('PriceID: %d | DepartID: %d | index: %d | PriceName: %s | ChangeType: %s | %s',[
       Data^.PriceID,
       Data^.DepartID,
+      Node^.Index,
       Data^.PriceName,
-      ss
+      ss,
+      ss1
                             ]);
   end;
+
+  ActChkStatusBtnExecute(Sender);
+  ActChkStatusMnuVSTExecute(Sender);
+end;
+
+procedure TForm1.vstCollapsed(Sender: TBaseVirtualTree; Node: PVirtualNode);
+begin
+//  actNodeCollaps.Enabled:= ((vst.SelectedCount = 1) and (vsExpanded in Node^.States));
+//  actNodeExpand.Enabled:= ((vst.SelectedCount = 1) and not (vsExpanded in Node^.States));
+  ActChkStatusMnuVSTExecute(Sender);
 end;
 
 procedure TForm1.vstDragDrop(Sender: TBaseVirtualTree; Source: TObject; DataObject: IDataObject; Formats: TFormatArray;
@@ -1249,6 +1338,11 @@ begin
   Allowed:= not ((Column = 1) and (NodeLvl = 0));
 end;
 
+procedure TForm1.vstExpanded(Sender: TBaseVirtualTree; Node: PVirtualNode);
+begin
+  ActChkStatusMnuVSTExecute(Sender);
+end;
+
 procedure TForm1.vstFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
 var
   Data: PMyRec;
@@ -1257,7 +1351,6 @@ begin
 
   if Assigned(Data) then
   begin
-
     Finalize(Data^);
   end;
 end;

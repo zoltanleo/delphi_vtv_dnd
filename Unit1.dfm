@@ -217,15 +217,18 @@ object Form1: TForm1
         Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowHint, hoShowImages, hoShowSortGlyphs, hoVisible, hoAutoSpring, hoFullRepaintOnResize]
         HintMode = hmTooltip
         ParentShowHint = False
+        PopupMenu = ppmVST
         ShowHint = True
         TabOrder = 0
         TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScrollOnExpand, toAutoSort, toAutoTristateTracking, toAutoChangeScale]
         TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toWheelPanning]
         TreeOptions.SelectionOptions = [toExtendedFocus, toFullRowSelect, toLevelSelectConstraint, toMultiSelect, toSiblingSelectConstraint, toAlwaysSelectNode]
         OnAddToSelection = vstAddToSelection
+        OnCollapsed = vstCollapsed
         OnDragOver = vstDragOver
         OnDragDrop = vstDragDrop
         OnEditing = vstEditing
+        OnExpanded = vstExpanded
         OnFreeNode = vstFreeNode
         OnGetText = vstGetText
         OnPaintText = vstPaintText
@@ -399,6 +402,31 @@ object Form1: TForm1
       Caption = 'Node Restore'
       OnExecute = ActNodeRestoreExecute
     end
+    object actAllExpand: TAction
+      Category = 'ppmVST'
+      Caption = 'Expand all nodes'
+      OnExecute = actAllExpandExecute
+    end
+    object actAllCollaps: TAction
+      Category = 'ppmVST'
+      Caption = 'Collaps all nodes'
+      OnExecute = actAllCollapsExecute
+    end
+    object actNodeCollaps: TAction
+      Category = 'ppmVST'
+      Caption = 'Collaps root node'
+      OnExecute = actNodeCollapsExecute
+    end
+    object actNodeExpand: TAction
+      Category = 'ppmVST'
+      Caption = 'Expand root node'
+      OnExecute = actNodeExpandExecute
+    end
+    object ActChkStatusMnuVST: TAction
+      Category = 'ppmVST'
+      Caption = 'ActChkStatusMnuVST'
+      OnExecute = ActChkStatusMnuVSTExecute
+    end
   end
   object mds_labor: TMemTableEh
     Params = <>
@@ -409,5 +437,24 @@ object Form1: TForm1
     Params = <>
     Left = 176
     Top = 192
+  end
+  object ppmVST: TPopupMenu
+    Left = 738
+    Top = 162
+    object Expandallnodes1: TMenuItem
+      Action = actAllExpand
+    end
+    object Collapsallnodes1: TMenuItem
+      Action = actAllCollaps
+    end
+    object N1: TMenuItem
+      Caption = '-'
+    end
+    object Expandrootnode1: TMenuItem
+      Action = actNodeExpand
+    end
+    object Collapsrootnode1: TMenuItem
+      Action = actNodeCollaps
+    end
   end
 end

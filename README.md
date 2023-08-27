@@ -2,6 +2,10 @@
 
 VTV Manipulation Project
 
+#### 1.0.6
+- added popupMenu + actions to expand/collapse nodes
+![](pict/vtv_dnd_06.gif)
+
 #### 1.0.5
 - implemented all the main actions to update nodes
 
