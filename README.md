@@ -2,6 +2,9 @@
 
 VTV Manipulation Project
 
+#### 1.0.7
+- fixed some bugs for addRoot/addChild/EditNode actions
+
 #### 1.0.6
 - added popupMenu + actions to expand/collapse nodes
 ![](pict/vtv_dnd_06.gif)

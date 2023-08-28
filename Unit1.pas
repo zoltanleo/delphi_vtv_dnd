@@ -13,6 +13,7 @@ uses
 type
   TTreeChangeType = (tctNone, tctDeleted, tctInserted, tctUpdated);
   TEditMode = (emAdd, emEdit);
+  TActionNodeSender = (ansNodeRoot, ansNodeChild, ansNodeEdit);
 
   PMyRec = ^TMyRec;
   TMyRec = record
@@ -80,6 +81,13 @@ type
     Collapsallnodes1: TMenuItem;
     Expandrootnode1: TMenuItem;
     Collapsrootnode1: TMenuItem;
+    N2: TMenuItem;
+    AddRoot1: TMenuItem;
+    AddChild1: TMenuItem;
+    NodeEdit1: TMenuItem;
+    N3: TMenuItem;
+    NodeDel1: TMenuItem;
+    NodeRestore1: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure cbbPriceChange(Sender: TObject);
@@ -130,8 +138,9 @@ type
     FPriceName: string;
     FFilterStr: string;
     FTreeChangeType: TTreeChangeType;
-    FNodeSender: PVirtualNode;
     FEditMode: TEditMode;
+    FActionNodeSender: TActionNodeSender;
+    FNodeSender: PVirtualNode;
     procedure FillCbbPrice(Sender: TObject);
   public
     property ClinicID: Integer read FClinicID;
@@ -141,6 +150,7 @@ type
     property FilterStr: string read FFilterStr;
     property TreeChangeType: TTreeChangeType read FTreeChangeType;
     property NodeSender: PVirtualNode read FNodeSender;
+    property ActionNodeSender: TActionNodeSender read FActionNodeSender;
     property EditMode: TEditMode read FEditMode write FEditMode;
   end;
 
@@ -267,11 +277,19 @@ implementation
 {$R *.dfm}
 
 procedure TForm1.ActRootAddExecute(Sender: TObject);
+var
+  NodeLvl: Integer;
 begin
   actEdtNodeDataOnExecute(Sender);
   pnlEdtCost.Visible:= False;
   edtPriceName.Clear;
-  FNodeSender:= vst.GetFirstSelected;
+
+  FActionNodeSender:= ansNodeRoot;
+
+  if (vst.SelectedCount > 0)
+    then FNodeSender:= vst.GetFirstSelected
+    else FNodeSender:= nil;
+
   FTreeChangeType:= tctInserted;
   if edtPriceName.CanFocus then edtPriceName.SetFocus;
 end;
@@ -537,16 +555,36 @@ begin
       Exit
     end;
 
-  NodeLvl:= vst.GetNodeLevel(NodeSender);
+  case ActionNodeSender of
+    ansNodeRoot:
+              begin
+                if not Assigned(NodeSender)
+                  then Node:= vst.AddChild(NodeSender)
+                  else
+                    begin
+                      NodeLvl:= vst.GetNodeLevel(NodeSender);
+                      if (NodeLvl = 1) then FNodeSender:= NodeSender.Parent;
+                      Node:= vst.InsertNode(NodeSender, amInsertAfter);
+                    end;
+              end;
+    ansNodeChild:
+              begin
+                if not Assigned(NodeSender) then Exit;
+                NodeLvl:= vst.GetNodeLevel(NodeSender);
 
-  case NodeLvl of
-    0: Node:= vst.AddChild(nil);
-    1: Node:= vst.InsertNode(NodeSender,amInsertAfter);
+                case NodeLvl of
+                  0: Node:= vst.InsertNode(NodeSender, amAddChildFirst);
+                  1: Node:= vst.InsertNode(NodeSender, amInsertAfter);
+                end;
+              end;
+    ansNodeEdit: Node:= NodeSender;
   end;
 
   Data:= vst.GetNodeData(Node);
   if Assigned(Data) then
   begin
+    NodeLvl:= vst.GetNodeLevel(Node);
+
     Data.PriceID:= vst.AbsoluteIndex(Node);
     Data.DepartID:= 0;
     Data.PriceName:= Trim(edtPriceName.Text);
@@ -558,9 +596,18 @@ begin
           Data.LastChangeType:= tctInserted;
         end;
       emEdit:
-        begin
-          Data.CurrentChangeType:= tctUpdated;
-          Data.LastChangeType:= tctNone;
+        case ActionNodeSender of
+          ansNodeEdit:
+            begin
+              if (Data.LastChangeType = tctNone) then Data.CurrentChangeType:= tctUpdated;
+              Data.LastChangeType:= tctNone;
+            end;
+          else
+            begin
+              Data.CurrentChangeType:= tctInserted;
+              Data.LastChangeType:= tctInserted;
+            end;
+
         end;
     end;
 
@@ -654,16 +701,19 @@ var
   Data: PMyRec;
   NodeLvl: Integer;
 begin
-  FNodeSender:= vst.GetFirstSelected;
+  if (vst.SelectedCount <> 1) then Exit;
 
-  NodeLvl:= vst.GetNodeLevel(FNodeSender);
+  FNodeSender:= vst.GetFirstSelected;
+  if not Assigned(NodeSender) then Exit;
+
+  FActionNodeSender:= ansNodeEdit;
+  NodeLvl:= vst.GetNodeLevel(NodeSender);
   pnlEdtCost.Visible:= (NodeLvl = 1);
 
-  Data:= vst.GetNodeData(FNodeSender);
-
+  Data:= vst.GetNodeData(NodeSender);
   if not Assigned(Data) then Exit;
-  actEdtNodeDataOnExecute(Sender);
 
+  actEdtNodeDataOnExecute(Sender);
   edtPriceName.Text:= Data^.PriceName;
 
   if (NodeLvl = 1) then
@@ -763,7 +813,14 @@ procedure TForm1.ActChildAddExecute(Sender: TObject);
 var
   tmpCurr: Currency;
   fs: TFormatSettings;
+  NodeLvl: Integer;
 begin
+  if (vst.SelectedCount = 0) then
+  begin
+    Application.MessageBox('Должен выделен хотя бы один узел!','Недостаточно данных', MB_ICONINFORMATION);
+    Exit;
+  end;
+
   fs:= TFormatSettings.Create;
   actEdtNodeDataOnExecute(Sender);
   pnlEdtCost.Visible:= True;
@@ -774,10 +831,8 @@ begin
     then edtPriceCost.Text:= Format('%2.2f',[tmpCurr])
     else edtPriceCost.Clear;
 
-  case vst.GetNodeLevel(vst.GetFirstSelected) of
-    0: FNodeSender:= vst.GetLastChild(vst.GetFirstSelected);
-    1: FNodeSender:= vst.GetFirstSelected;
-  end;
+  FNodeSender:= vst.GetFirstSelected;
+  FActionNodeSender:= ansNodeChild;
 
   if edtPriceName.CanFocus then edtPriceName.SetFocus;
 end;
@@ -790,7 +845,7 @@ var
   RootID: Integer;//parent ID of current Node
 
 begin
-  EditMode:= emAdd;
+  EditMode:= emEdit;
   if not mds_price.Active then Exit;
 
   try
@@ -1166,6 +1221,8 @@ begin
   Data:= Sender.GetNodeData(Node);
   if Assigned(Data) then
   begin
+    FTreeChangeType:= Data.CurrentChangeType;
+
     case TreeChangeType of
       tctNone: ss:= 'tctNone';
       tctDeleted: ss:= 'tctDeleted';
