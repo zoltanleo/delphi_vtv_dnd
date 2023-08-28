@@ -2,6 +2,9 @@
 
 VTV Manipulation Project
 
+#### 1.0.8
+- moved nodes now get the ParentID as the PriceID of the new root node.
+
 #### 1.0.7
 - fixed some bugs for addRoot/addChild/EditNode actions
 

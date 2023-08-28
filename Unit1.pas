@@ -1259,16 +1259,14 @@ end;
 procedure TForm1.vstDragDrop(Sender: TBaseVirtualTree; Source: TObject; DataObject: IDataObject; Formats: TFormatArray;
   Shift: TShiftState; Pt: TPoint; var Effect: Integer; Mode: TDropMode);
 var
-//  Nodes: TNodeArray;
-//  IsAllow: Boolean;
-//  i: Integer;
   NodeLvl: Integer;
 
 //  pSource,
-  pTarget: PVirtualNode;
+  NodeTarget: PVirtualNode;//receiving node
+  Nodes: TNodeArray;//moving nodes
   attMode: TVTNodeAttachMode;
-  Data: PMyRec;
-  Nodes: TNodeArray;
+  DataTarget: PMyRec;
+  DataSource: PMyRec;
   i: Integer;
 begin
 {$REGION 'skiped'}
@@ -1294,7 +1292,7 @@ begin
   //    else ShowMessage('есть root');
 {$ENDREGION}
 //  pSource := TVirtualStringTree(Source).FocusedNode;
-  pTarget := Sender.DropTargetNode;
+  NodeTarget := Sender.DropTargetNode;
   Nodes:= TVirtualStringTree(Source).GetSortedSelection(True);
 
 
@@ -1302,20 +1300,20 @@ begin
     dmNowhere: attMode := amNoWhere;
     dmAbove:
       begin
-//        Data:=Sender.GetNodeData(pTarget);
-//        Self.Caption:= Self.Caption + ' | ' + Data^.PriceName + ' | index = ' + IntToStr(pTarget^.Index);
-        NodeLvl:= Sender.GetNodeLevel(pTarget);
+        DataTarget:=Sender.GetNodeData(NodeTarget);
+        Self.Caption:= Self.Caption + ' | ' + DataTarget^.PriceName + ' | index = ' + IntToStr(NodeTarget^.Index);
+        NodeLvl:= Sender.GetNodeLevel(NodeTarget);
 
         case NodeLvl of
           0: attMode := amAddChildFirst;
           1: attMode := amInsertBefore;
         end;
       end;
-    dmOnNode: //attMode// := amInsertAfter;
+    dmOnNode:
       begin
-        Data:=Sender.GetNodeData(pTarget);
-        Self.Caption:= Self.Caption + ' | ' + Data^.PriceName + ' | index = ' + IntToStr(pTarget^.Index);
-        NodeLvl:= Sender.GetNodeLevel(pTarget);
+        DataTarget:=Sender.GetNodeData(NodeTarget);
+        Self.Caption:= Self.Caption + ' | ' + DataTarget^.PriceName + ' | index = ' + IntToStr(NodeTarget^.Index);
+        NodeLvl:= Sender.GetNodeLevel(NodeTarget);
 
         case NodeLvl of
           0: attMode := amAddChildFirst;
@@ -1324,9 +1322,9 @@ begin
       end;
      dmBelow:
      begin
-        Data:=Sender.GetNodeData(pTarget);
-        Self.Caption:= Self.Caption + ' | ' + Data^.PriceName + ' | index = ' + IntToStr(pTarget^.Index);
-        NodeLvl:= Sender.GetNodeLevel(pTarget);
+        DataTarget:=Sender.GetNodeData(NodeTarget);
+        Self.Caption:= Self.Caption + ' | ' + DataTarget^.PriceName + ' | index = ' + IntToStr(NodeTarget^.Index);
+        NodeLvl:= Sender.GetNodeLevel(NodeTarget);
 
         case NodeLvl of
           0: attMode := amAddChildFirst;
@@ -1335,8 +1333,20 @@ begin
      end;
   end;
 
+  NodeLvl:= Sender.GetNodeLevel(NodeTarget);
+
+  case NodeLvl of
+    0: DataTarget:= Sender.GetNodeData(NodeTarget);
+    1: DataTarget:= Sender.GetNodeData(NodeTarget.Parent);
+  end;
+
+  //move the nodes and change their ParentID to match the current root node
   for i := 0 to Pred(System.Length(Nodes)) do
-    Sender.MoveTo(Nodes[i], pTarget, attMode, False);
+    begin
+      Sender.MoveTo(Nodes[i], NodeTarget, attMode, False);
+      DataSource:= TVirtualStringTree(Source).GetNodeData(Nodes[i]);
+      DataSource.DepartID:= DataTarget.PriceID;
+    end;
 end;
 
 procedure TForm1.vstDragOver(Sender: TBaseVirtualTree; Source: TObject; Shift: TShiftState; State: TDragState;
@@ -1348,21 +1358,12 @@ var
   Data: PMyRec;
   drgNode,tgtNode: PVirtualNode;
 begin
-//  case mode of
-//    dmNowhere: self.Caption:= 'Nowhere';
-//    dmAbove: self.Caption:= 'Above';
-//    dmOnNode: self.Caption:= 'OnNode';
-//    dmBelow: self.Caption:= 'Below';
-//  end;
-
   if (Sender <> Source) then Exit;
   tgtNode:= Sender.DropTargetNode;//node we are above or around
   drgNode:= TBaseVirtualTree(Source).GetFirstSelected;//first dragged node
 
-  if (Assigned(tgtNode) and Assigned(drgNode))then
+  if (Assigned(tgtNode) and Assigned(drgNode)) then
   begin
-//    Data:= Sender.GetNodeData(tgtNode);
-//    Self.Caption:= Self.Caption + ' | ' + Data^.PriceName;
     if ((drgNode.Parent = tgtNode.Parent) or (drgNode.Parent = tgtNode)) then Exit;
   end;
 
@@ -1385,8 +1386,7 @@ var
   Data: PMyRec;
   NodeLvl: Integer;
 begin
-  //запрещаем редактировать "стоимость" разделов прайса
-
+  //restrict editing the "cost" of the price list sections
   Allowed:= False;
   NodeLvl:= Sender.GetNodeLevel(Node);
   Data:= Sender.GetNodeData(Node);
