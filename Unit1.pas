@@ -23,7 +23,7 @@ type
     LastChangeType: TTreeChangeType;
     PriceName: string;
     CurrentCost: Currency;
-    LastCost: Currency;
+    InitCost: Currency;
   end;
 
   TForm1 = class(TForm)
@@ -90,6 +90,7 @@ type
     NodeRestore1: TMenuItem;
     Panel1: TPanel;
     chbSetZeroCost: TCheckBox;
+    chbShowUpdatedPrice: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure cbbPriceChange(Sender: TObject);
@@ -109,7 +110,6 @@ type
     procedure vstDragDrop(Sender: TBaseVirtualTree; Source: TObject; DataObject: IDataObject; Formats: TFormatArray;
       Shift: TShiftState; Pt: TPoint; var Effect: Integer; Mode: TDropMode);
     procedure vstAddToSelection(Sender: TBaseVirtualTree; Node: PVirtualNode);
-    procedure vstNodeClick(Sender: TBaseVirtualTree; const HitInfo: THitInfo);
     procedure ActNodeDelExecute(Sender: TObject);
     procedure edtPriceCostChange(Sender: TObject);
     procedure edtPriceCostKeyPress(Sender: TObject; var Key: Char);
@@ -134,6 +134,7 @@ type
     procedure vstCollapsed(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure vstExpanded(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure chbSetZeroCostClick(Sender: TObject);
+    procedure chbShowUpdatedPriceClick(Sender: TObject);
   private
     FClinicID: Integer;
     FPeolpeID: Integer;
@@ -614,18 +615,29 @@ begin
         end;
     end;
 
-    Data.CurrentCost:= 0;
-    Data.LastCost:= 0;
+    case NodeLvl of
+      0:
+        begin
+          Data.CurrentCost:= 0;
+          Data.InitCost:= 0;
+        end;
+      1:
+        begin
+          fs:= TFormatSettings.Create;
+          if TryStrToCurr(edtPriceCost.Text, tmpCurr,fs) then Data.CurrentCost:= tmpCurr;
+        end;
 
-    if (NodeLvl = 1) then
-    begin
-      fs:= TFormatSettings.Create;
-      if TryStrToCurr(edtPriceCost.Text, tmpCurr,fs) then
-      begin
-        Data.CurrentCost:= tmpCurr;
-        Data.LastCost:= tmpCurr;
-      end;
     end;
+
+//    if (NodeLvl = 1) then
+//    begin
+//      fs:= TFormatSettings.Create;
+//      if TryStrToCurr(edtPriceCost.Text, tmpCurr,fs) then
+//      begin
+//        Data.CurrentCost:= tmpCurr;
+////        Data.LastCost:= tmpCurr;
+//      end;
+//    end;
   end;
 
   vst.Refresh;
@@ -926,7 +938,7 @@ begin
           Data^.LastChangeType:= TreeChangeType;
           Data^.PriceName:= mds_price.FieldByName('LABORISSUE_NAME').AsString;
           Data^.CurrentCost:= 0;
-          Data^.LastCost:= 0;
+          Data^.InitCost:= 0;
 
           RootID:= NodeID;
 
@@ -948,7 +960,7 @@ begin
               Data^.LastChangeType:= TreeChangeType;
               Data^.PriceName:= mds_price.FieldByName('BASEPRICE_PROC_NAME').AsString;
               Data^.CurrentCost:= mds_price.FieldByName('COST_PROC_PRICE').AsCurrency;
-              Data^.LastCost:= mds_price.FieldByName('COST_PROC_PRICE').AsCurrency;
+              Data^.InitCost:= mds_price.FieldByName('COST_PROC_PRICE').AsCurrency;
             end;
 
             mds_price.Next;
@@ -1011,7 +1023,7 @@ begin
         begin
           if chbSetZeroCost.Checked
             then Data^.CurrentCost:= 0
-            else Data^.CurrentCost:= Data^.LastCost;
+            else Data^.CurrentCost:= Data^.InitCost;
         end;
         chNode:= chNode.NextSibling;
       end;
@@ -1021,6 +1033,11 @@ begin
 
   vst.Refresh;
 
+end;
+
+procedure TForm1.chbShowUpdatedPriceClick(Sender: TObject);
+begin
+  vst.Refresh;
 end;
 
 procedure TForm1.edtPriceCostChange(Sender: TObject);
@@ -1236,11 +1253,13 @@ begin
       FillCbbPrice(Sender);
       cbbPriceChange(Sender);
 
-      EditMode:= emAdd;
+      EditMode:= emEdit;
       pnlTblPrice.Visible:= False;
       actPriceFillExecute(Sender);
 
       chbSetZeroCost.Enabled:= (EditMode = emAdd);
+      chbShowUpdatedPrice.Enabled:= (EditMode = emEdit);
+
       vst.FullExpand(nil);
       actEdtNodeDataOffExecute(Sender);
     except
@@ -1559,11 +1578,6 @@ begin
 //  end;
 end;
 
-procedure TForm1.vstNodeClick(Sender: TBaseVirtualTree; const HitInfo: THitInfo);
-begin
-//
-end;
-
 procedure TForm1.vstPaintText(Sender: TBaseVirtualTree; const TargetCanvas: TCanvas; Node: PVirtualNode;
   Column: TColumnIndex; TextType: TVSTTextType);
 var
@@ -1572,17 +1586,23 @@ begin
   Data:= Sender.GetNodeData(Node);
 
   if Assigned(Data) then
+  begin
     if (Data^.CurrentChangeType = tctDeleted) then
     begin
-      TargetCanvas.Font.Style:= [TFontStyle.fsStrikeOut];
+      TargetCanvas.Font.Style:= TargetCanvas.Font.Style + [TFontStyle.fsStrikeOut];
       TargetCanvas.Font.Color:= clGrayText;
     end;
+
+    if (EditMode = emEdit) then
+      if chbShowUpdatedPrice.Checked then
+        if (Data^.CurrentCost <> Data^.InitCost) then
+          TargetCanvas.Font.Style:= TargetCanvas.Font.Style + [TFontStyle.fsBold];
+  end;
 end;
 
 procedure TForm1.vstRemoveFromSelection(Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
   ActChkStatusBtnExecute(Sender);
-//  ActChkStatusBtnUpdate(Sender);
 end;
 
 end.

@@ -193,9 +193,9 @@ object Form1: TForm1
     end
     object pnlTreeView: TPanel
       Left = 1
-      Top = 83
+      Top = 97
       Width = 493
-      Height = 387
+      Height = 373
       Align = alClient
       Caption = 'pnlTreeView'
       TabOrder = 1
@@ -204,12 +204,12 @@ object Form1: TForm1
       ExplicitHeight = 365
       DesignSize = (
         493
-        387)
+        373)
       object vst: TVirtualStringTree
         Left = 5
         Top = 6
         Width = 399
-        Height = 374
+        Height = 360
         Anchors = [akLeft, akTop, akRight, akBottom]
         DragMode = dmAutomatic
         DragOperations = [doCopy, doMove, doLink]
@@ -237,7 +237,6 @@ object Form1: TForm1
         OnInitNode = vstInitNode
         OnKeyPress = vstKeyPress
         OnNewText = vstNewText
-        OnNodeClick = vstNodeClick
         OnRemoveFromSelection = vstRemoveFromSelection
         Touch.InteractiveGestures = [igPan, igPressAndTap]
         Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
@@ -309,21 +308,27 @@ object Form1: TForm1
       Left = 1
       Top = 42
       Width = 493
-      Height = 41
+      Height = 55
       Align = alTop
       Caption = 'Panel1'
       TabOrder = 2
-      ExplicitLeft = 72
-      ExplicitTop = 56
-      ExplicitWidth = 185
       object chbSetZeroCost: TCheckBox
         Left = 5
         Top = 6
-        Width = 97
+        Width = 140
         Height = 17
         Caption = 'Set cost as zero'
         TabOrder = 0
         OnClick = chbSetZeroCostClick
+      end
+      object chbShowUpdatedPrice: TCheckBox
+        Left = 5
+        Top = 29
+        Width = 164
+        Height = 17
+        Caption = 'Highlight updated prices'
+        TabOrder = 1
+        OnClick = chbShowUpdatedPriceClick
       end
     end
   end
