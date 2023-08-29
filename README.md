@@ -2,6 +2,9 @@
 
 VTV Manipulation Project
 
+#### 1.0.9
+- implemented the ability to set the cost as zero 
+
 #### 1.0.8
 - moved nodes now get the ParentID as the PriceID of the new root node.
 

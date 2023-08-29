@@ -88,6 +88,8 @@ type
     N3: TMenuItem;
     NodeDel1: TMenuItem;
     NodeRestore1: TMenuItem;
+    Panel1: TPanel;
+    chbSetZeroCost: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure cbbPriceChange(Sender: TObject);
@@ -131,6 +133,7 @@ type
     procedure ActChkStatusMnuVSTExecute(Sender: TObject);
     procedure vstCollapsed(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure vstExpanded(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure chbSetZeroCostClick(Sender: TObject);
   private
     FClinicID: Integer;
     FPeolpeID: Integer;
@@ -845,7 +848,6 @@ var
   RootID: Integer;//parent ID of current Node
 
 begin
-  EditMode:= emEdit;
   if not mds_price.Active then Exit;
 
   try
@@ -899,18 +901,19 @@ begin
 
         Node:= vst.AddChild(nil);
         Data:= vst.GetNodeData(Node);
+        RootID:= 0;
 
         case EditMode of
           emAdd:
             begin
               NodeID:= vst.AbsoluteIndex(Node);
-              RootID:= 0;
+//              RootID:= 0;
               FTreeChangeType:= tctInserted;
             end;
           emEdit:
             begin
               NodeID:= mds_price.FieldByName('BASEPRICE_ID').AsInteger;
-              RootID:= mds_price.FieldByName('LABORISSUE_ID').AsInteger;
+//              RootID:= mds_price.FieldByName('LABORISSUE_ID').AsInteger;
               FTreeChangeType:= tctNone;
             end;
         end;
@@ -982,6 +985,42 @@ begin
   finally
     mds_price.EnableControls;
   end;
+end;
+
+procedure TForm1.chbSetZeroCostClick(Sender: TObject);
+var
+  rNode, chNode: PVirtualNode;
+  Data: PMyRec;
+begin
+  if (vst.TotalCount = 0) then Exit;
+  if (EditMode = emEdit) then Exit;
+
+  rNode:= vst.GetFirst;
+
+  while Assigned(rNode) do
+  begin
+    if (vsHasChildren in rNode^.States) then
+    begin
+      chNode:= vst.GetFirstChild(rNode);
+
+      while Assigned(chNode) do
+      begin
+        Data:= vst.GetNodeData(chNode);
+
+        if Assigned(Data) then
+        begin
+          if chbSetZeroCost.Checked
+            then Data^.CurrentCost:= 0
+            else Data^.CurrentCost:= Data^.LastCost;
+        end;
+        chNode:= chNode.NextSibling;
+      end;
+    end;
+    rNode:= rNode.NextSibling;
+  end;
+
+  vst.Refresh;
+
 end;
 
 procedure TForm1.edtPriceCostChange(Sender: TObject);
@@ -1194,11 +1233,14 @@ begin
       tmpTrans.Commit;
 
       mds_price.First;
-
       FillCbbPrice(Sender);
       cbbPriceChange(Sender);
+
+      EditMode:= emAdd;
       pnlTblPrice.Visible:= False;
       actPriceFillExecute(Sender);
+
+      chbSetZeroCost.Enabled:= (EditMode = emAdd);
       vst.FullExpand(nil);
       actEdtNodeDataOffExecute(Sender);
     except

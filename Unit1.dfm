@@ -87,6 +87,8 @@ object Form1: TForm1
     Align = alClient
     Caption = 'Panel3'
     TabOrder = 1
+    ExplicitWidth = 491
+    ExplicitHeight = 470
     object pnlEdtNodeData: TPanel
       Left = 1
       Top = 1
@@ -191,20 +193,23 @@ object Form1: TForm1
     end
     object pnlTreeView: TPanel
       Left = 1
-      Top = 42
+      Top = 83
       Width = 493
-      Height = 428
+      Height = 387
       Align = alClient
       Caption = 'pnlTreeView'
       TabOrder = 1
+      ExplicitTop = 104
+      ExplicitWidth = 489
+      ExplicitHeight = 365
       DesignSize = (
         493
-        428)
+        387)
       object vst: TVirtualStringTree
         Left = 5
         Top = 6
         Width = 399
-        Height = 415
+        Height = 374
         Anchors = [akLeft, akTop, akRight, akBottom]
         DragMode = dmAutomatic
         DragOperations = [doCopy, doMove, doLink]
@@ -236,6 +241,7 @@ object Form1: TForm1
         OnRemoveFromSelection = vstRemoveFromSelection
         Touch.InteractiveGestures = [igPan, igPressAndTap]
         Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
+        ExplicitHeight = 415
         Columns = <
           item
             Position = 0
@@ -297,6 +303,27 @@ object Form1: TForm1
         Anchors = [akTop, akRight]
         TabOrder = 5
         ExplicitLeft = 406
+      end
+    end
+    object Panel1: TPanel
+      Left = 1
+      Top = 42
+      Width = 493
+      Height = 41
+      Align = alTop
+      Caption = 'Panel1'
+      TabOrder = 2
+      ExplicitLeft = 72
+      ExplicitTop = 56
+      ExplicitWidth = 185
+      object chbSetZeroCost: TCheckBox
+        Left = 5
+        Top = 6
+        Width = 97
+        Height = 17
+        Caption = 'Set cost as zero'
+        TabOrder = 0
+        OnClick = chbSetZeroCostClick
       end
     end
   end
