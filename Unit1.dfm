@@ -87,8 +87,6 @@ object Form1: TForm1
     Align = alClient
     Caption = 'Panel3'
     TabOrder = 1
-    ExplicitWidth = 491
-    ExplicitHeight = 470
     object pnlEdtNodeData: TPanel
       Left = 1
       Top = 1
@@ -199,9 +197,6 @@ object Form1: TForm1
       Align = alClient
       Caption = 'pnlTreeView'
       TabOrder = 1
-      ExplicitTop = 104
-      ExplicitWidth = 489
-      ExplicitHeight = 365
       DesignSize = (
         493
         373)
@@ -214,8 +209,8 @@ object Form1: TForm1
         DragMode = dmAutomatic
         DragOperations = [doCopy, doMove, doLink]
         Header.AutoSizeIndex = 0
-        Header.Height = 20
-        Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowHint, hoShowImages, hoShowSortGlyphs, hoVisible, hoAutoSpring, hoFullRepaintOnResize]
+        Header.Height = 30
+        Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoOwnerDraw, hoShowHint, hoShowImages, hoShowSortGlyphs, hoVisible, hoAutoSpring, hoFullRepaintOnResize]
         HintMode = hmTooltip
         ParentShowHint = False
         PopupMenu = ppmVST
@@ -225,6 +220,7 @@ object Form1: TForm1
         TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toWheelPanning]
         TreeOptions.SelectionOptions = [toExtendedFocus, toFullRowSelect, toLevelSelectConstraint, toMultiSelect, toSiblingSelectConstraint, toAlwaysSelectNode]
         OnAddToSelection = vstAddToSelection
+        OnAdvancedHeaderDraw = vstAdvancedHeaderDraw
         OnCollapsed = vstCollapsed
         OnDragOver = vstDragOver
         OnDragDrop = vstDragDrop
@@ -234,21 +230,28 @@ object Form1: TForm1
         OnGetText = vstGetText
         OnPaintText = vstPaintText
         OnGetNodeDataSize = vstGetNodeDataSize
+        OnHeaderClick = vstHeaderClick
+        OnHeaderDrawQueryElements = vstHeaderDrawQueryElements
         OnInitNode = vstInitNode
         OnKeyPress = vstKeyPress
         OnNewText = vstNewText
         OnRemoveFromSelection = vstRemoveFromSelection
         Touch.InteractiveGestures = [igPan, igPressAndTap]
         Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-        ExplicitHeight = 415
         Columns = <
           item
+            CaptionAlignment = taCenter
+            Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coEditable, coStyleColor]
             Position = 0
+            Style = vsOwnerDraw
             Text = #1053#1072#1079#1074#1072#1085#1080#1077
             Width = 295
           end
           item
+            CaptionAlignment = taCenter
+            Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coEditable, coStyleColor]
             Position = 1
+            Style = vsOwnerDraw
             Text = #1057#1090#1086#1080#1084#1086#1089#1090#1100
             Width = 100
           end>
@@ -312,6 +315,7 @@ object Form1: TForm1
       Align = alTop
       Caption = 'Panel1'
       TabOrder = 2
+      ExplicitWidth = 489
       object chbSetZeroCost: TCheckBox
         Left = 5
         Top = 6

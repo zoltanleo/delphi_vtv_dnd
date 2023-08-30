@@ -135,6 +135,11 @@ type
     procedure vstExpanded(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure chbSetZeroCostClick(Sender: TObject);
     procedure chbShowUpdatedPriceClick(Sender: TObject);
+    procedure vstHeaderClick(Sender: TVTHeader; HitInfo: TVTHeaderHitInfo);
+    procedure vstHeaderDrawQueryElements(Sender: TVTHeader; var PaintInfo: THeaderPaintInfo;
+      var Elements: THeaderPaintElements);
+    procedure vstAdvancedHeaderDraw(Sender: TVTHeader; var PaintInfo: THeaderPaintInfo;
+      const Elements: THeaderPaintElements);
   private
     FClinicID: Integer;
     FPeolpeID: Integer;
@@ -1310,6 +1315,43 @@ begin
   ActChkStatusMnuVSTExecute(Sender);
 end;
 
+procedure TForm1.vstAdvancedHeaderDraw(Sender: TVTHeader; var PaintInfo: THeaderPaintInfo;
+  const Elements: THeaderPaintElements);
+var
+  r: TRect;//current rectangle
+  i: Integer;
+  cp: TPoint;//center of current rectangle
+  txt: string;//caption text
+  te: TSize;//canvas text extend
+begin
+  //Header.Options = Header.Options + [hoOwnerDraw];
+  if (hpeBackground in Elements) then
+  begin
+    for i := 0 to Pred(Sender.Columns.Count) do
+      if (PaintInfo.Column = Sender.Columns.Items[i]) then
+      begin
+        r:= PaintInfo.PaintRectangle;
+        if (i <> 0)
+          then r.Inflate(1,1,0,0)
+          else r.Inflate(1,1,0,0);
+
+        PaintInfo.TargetCanvas.Brush.Color:= clBtnFace;
+        PaintInfo.TargetCanvas.FillRect(r);
+        PaintInfo.TargetCanvas.Brush.Color:= vst.Colors.TreeLineColor;
+        PaintInfo.TargetCanvas.FrameRect(r);
+
+        //Sender.Columns.Items[i].Style = vsOwnerDraw
+        PaintInfo.TargetCanvas.Brush.Color:= clBtnFace;
+        PaintInfo.TargetCanvas.Font.Color:= clHotLight;
+
+        cp:= r.CenterPoint;
+        txt:= Sender.Columns.Items[i].Text;
+        te:= PaintInfo.TargetCanvas.TextExtent(txt);
+        PaintInfo.TargetCanvas.TextOut(cp.X - te.cx div 2, cp.Y - te.cy div 2, txt);
+      end;
+  end;
+end;
+
 procedure TForm1.vstCollapsed(Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
 //  actNodeCollaps.Enabled:= ((vst.SelectedCount = 1) and (vsExpanded in Node^.States));
@@ -1524,6 +1566,17 @@ begin
         1: CellText:= Format('%2.2f %s',[Data^.CurrentCost, fs.CurrencyString]);
       end;
   end;
+end;
+
+procedure TForm1.vstHeaderClick(Sender: TVTHeader; HitInfo: TVTHeaderHitInfo);
+begin
+//
+end;
+
+procedure TForm1.vstHeaderDrawQueryElements(Sender: TVTHeader; var PaintInfo: THeaderPaintInfo;
+  var Elements: THeaderPaintElements);
+begin
+  Elements:= [hpeBackground, hpeText];
 end;
 
 procedure TForm1.vstInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode;

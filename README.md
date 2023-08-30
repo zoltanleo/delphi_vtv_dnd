@@ -2,6 +2,11 @@
 
 VTV Manipulation Project
 
+
+#### 1.0.11
+- implemented own rendering of the VTV header
+![](pict/vtv_dnd_11.gif)
+
 #### 1.0.10
 - implemented node highlighting with updated prices
 ![](pict/vtv_dnd_10.gif)
