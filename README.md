@@ -2,6 +2,11 @@
 
 VTV Manipulation Project
 
+#### 1.0.12
+- own rendering of the VTV header implemented on HeaderDraw event instead of AdvancedHeaderDraw event
+- implemented showing/hiding "deleted" nodes
+
+![](pict/vtv_dnd_12.gif)
 
 #### 1.0.11
 - implemented own rendering of the VTV header

@@ -87,6 +87,8 @@ object Form1: TForm1
     Align = alClient
     Caption = 'Panel3'
     TabOrder = 1
+    ExplicitWidth = 491
+    ExplicitHeight = 470
     object pnlEdtNodeData: TPanel
       Left = 1
       Top = 1
@@ -197,6 +199,8 @@ object Form1: TForm1
       Align = alClient
       Caption = 'pnlTreeView'
       TabOrder = 1
+      ExplicitWidth = 489
+      ExplicitHeight = 372
       DesignSize = (
         493
         373)
@@ -209,18 +213,12 @@ object Form1: TForm1
         DragMode = dmAutomatic
         DragOperations = [doCopy, doMove, doLink]
         Header.AutoSizeIndex = 0
-        Header.Height = 30
-        Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoOwnerDraw, hoShowHint, hoShowImages, hoShowSortGlyphs, hoVisible, hoAutoSpring, hoFullRepaintOnResize]
         HintMode = hmTooltip
         ParentShowHint = False
         PopupMenu = ppmVST
         ShowHint = True
         TabOrder = 0
-        TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScrollOnExpand, toAutoSort, toAutoTristateTracking, toAutoChangeScale]
-        TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toWheelPanning]
-        TreeOptions.SelectionOptions = [toExtendedFocus, toFullRowSelect, toLevelSelectConstraint, toMultiSelect, toSiblingSelectConstraint, toAlwaysSelectNode]
         OnAddToSelection = vstAddToSelection
-        OnAdvancedHeaderDraw = vstAdvancedHeaderDraw
         OnCollapsed = vstCollapsed
         OnDragOver = vstDragOver
         OnDragDrop = vstDragDrop
@@ -230,8 +228,7 @@ object Form1: TForm1
         OnGetText = vstGetText
         OnPaintText = vstPaintText
         OnGetNodeDataSize = vstGetNodeDataSize
-        OnHeaderClick = vstHeaderClick
-        OnHeaderDrawQueryElements = vstHeaderDrawQueryElements
+        OnHeaderDraw = vstHeaderDraw
         OnInitNode = vstInitNode
         OnKeyPress = vstKeyPress
         OnNewText = vstNewText
@@ -240,16 +237,12 @@ object Form1: TForm1
         Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
         Columns = <
           item
-            CaptionAlignment = taCenter
-            Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coEditable, coStyleColor]
             Position = 0
             Style = vsOwnerDraw
             Text = #1053#1072#1079#1074#1072#1085#1080#1077
             Width = 295
           end
           item
-            CaptionAlignment = taCenter
-            Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coEditable, coStyleColor]
             Position = 1
             Style = vsOwnerDraw
             Text = #1057#1090#1086#1080#1084#1086#1089#1090#1100
@@ -333,6 +326,15 @@ object Form1: TForm1
         Caption = 'Highlight updated prices'
         TabOrder = 1
         OnClick = chbShowUpdatedPriceClick
+      end
+      object chbHideDelNode: TCheckBox
+        Left = 280
+        Top = 5
+        Width = 193
+        Height = 17
+        Caption = 'Hide deleted node'
+        TabOrder = 2
+        OnClick = chbHideDelNodeClick
       end
     end
   end
@@ -471,8 +473,8 @@ object Form1: TForm1
     Top = 192
   end
   object ppmVST: TPopupMenu
-    Left = 738
-    Top = 162
+    Left = 178
+    Top = 274
     object Expandallnodes1: TMenuItem
       Action = actAllExpand
     end

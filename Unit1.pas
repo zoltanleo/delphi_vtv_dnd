@@ -91,6 +91,7 @@ type
     Panel1: TPanel;
     chbSetZeroCost: TCheckBox;
     chbShowUpdatedPrice: TCheckBox;
+    chbHideDelNode: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure cbbPriceChange(Sender: TObject);
@@ -135,11 +136,13 @@ type
     procedure vstExpanded(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure chbSetZeroCostClick(Sender: TObject);
     procedure chbShowUpdatedPriceClick(Sender: TObject);
-    procedure vstHeaderClick(Sender: TVTHeader; HitInfo: TVTHeaderHitInfo);
-    procedure vstHeaderDrawQueryElements(Sender: TVTHeader; var PaintInfo: THeaderPaintInfo;
-      var Elements: THeaderPaintElements);
-    procedure vstAdvancedHeaderDraw(Sender: TVTHeader; var PaintInfo: THeaderPaintInfo;
-      const Elements: THeaderPaintElements);
+//    procedure vstHeaderDrawQueryElements(Sender: TVTHeader; var PaintInfo: THeaderPaintInfo;
+//      var Elements: THeaderPaintElements);
+//    procedure vstAdvancedHeaderDraw(Sender: TVTHeader; var PaintInfo: THeaderPaintInfo;
+//      const Elements: THeaderPaintElements);
+    procedure vstHeaderDraw(Sender: TVTHeader; HeaderCanvas: TCanvas; Column: TVirtualTreeColumn; R: TRect; Hover,
+      Pressed: Boolean; DropMark: TVTDropMarkMode);
+    procedure chbHideDelNodeClick(Sender: TObject);
   private
     FClinicID: Integer;
     FPeolpeID: Integer;
@@ -709,8 +712,9 @@ begin
   end;
 
   vst.Refresh;
-  if vst.CanFocus then vst.SetFocus;
 
+  chbHideDelNodeClick(Sender);
+//  if vst.CanFocus then vst.SetFocus;
   ActChkStatusBtnExecute(Sender);
 end;
 
@@ -814,8 +818,9 @@ begin
   end;
 
   vst.Refresh;
-  if vst.CanFocus then vst.SetFocus;
+  chbHideDelNodeClick(Sender);
 
+  if vst.CanFocus then vst.SetFocus;
   ActChkStatusBtnExecute(Sender);
 end;
 
@@ -1045,6 +1050,71 @@ begin
   vst.Refresh;
 end;
 
+procedure TForm1.chbHideDelNodeClick(Sender: TObject);
+var
+  rNode, chNode, lsNode: PVirtualNode;
+  Data: PMyRec;
+begin
+  if (vst.RootNodeCount = 0) then Exit;
+
+  try
+    vst.BeginUpdate;
+
+    if (vst.SelectedCount > 0)
+      then lsNode:= vst.GetFirstSelected
+      else lsNode:= vst.GetFirst;
+
+    rNode:= vst.GetFirst;
+
+    while Assigned(rNode) do
+    begin
+      Data:= vst.GetNodeData(rNode);
+      if Assigned(Data) then
+      begin
+        if (Data.CurrentChangeType = tctDeleted)
+        then
+          vst.IsVisible[rNode]:= not chbHideDelNode.Checked
+        else
+          begin
+            if (rNode^.ChildCount > 0) then
+            begin
+              chNode:= rNode^.FirstChild;
+
+              while Assigned(chNode) do
+              begin
+                Data:= vst.GetNodeData(chNode);
+
+                if Assigned(Data) then
+                  if (Data.CurrentChangeType = tctDeleted) then vst.IsVisible[chNode]:= not chbHideDelNode.Checked;
+                chNode:= chNode.NextSibling;
+              end;
+            end;
+          end;
+      end;
+
+      rNode:= rNode.NextSibling;
+    end;
+    vst.Refresh;
+    if vst.CanFocus then vst.SetFocus;
+
+    if Assigned(vst.TopNode) then //visible node count > 0
+      if (chbHideDelNode.Checked and not (vsVisible in lsNode.States)) then
+      begin
+        vst.ClearSelection;
+
+        if (vsHasChildren in lsNode.States)
+          then lsNode:= vst.GetFirstVisible(nil,True,False)
+          else lsNode:= vst.GetFirstVisible(lsNode.Parent,True,False);
+
+        vst.Selected[lsNode]:= True;
+      end;
+
+   ActChkStatusBtnExecute(Sender);
+  finally
+    vst.EndUpdate;
+  end;
+end;
+
 procedure TForm1.edtPriceCostChange(Sender: TObject);
 var
   tmpCurr: Currency;
@@ -1066,6 +1136,7 @@ begin
   begin
 //    Label1.Caption:= Format('%2.2f',[tmpCurr]);
 //    udPriceCost.Position:= Trunc(tmpCurr);
+
   end;
 
 end;
@@ -1165,6 +1236,54 @@ begin
   FNodeSender:= nil;
   EditMode:= emAdd;
   edtPriceName.MaxLength:= 100;
+
+  with vst do
+  begin
+    //vst properties
+    hintmode:= hmTooltip;
+    ShowHint:= True;
+
+    TreeOptions.AutoOptions:= TreeOptions.AutoOptions
+              + []
+              - [toAutoDeleteMovedNodes]
+              ;
+
+    TreeOptions.MiscOptions:= TreeOptions.MiscOptions
+              + []
+              - [toToggleOnDblClick, toEditOnClick]
+              ;
+
+    TreeOptions.SelectionOptions:= TreeOptions.SelectionOptions
+              + [toExtendedFocus, toFullRowSelect, toLevelSelectConstraint, toMultiSelect,
+                 toSiblingSelectConstraint, toAlwaysSelectNode]
+              - []
+              ;
+
+
+    //header properties
+    with Header do
+    begin
+      Columns.Clear;
+      Columns.Add;
+      Columns[0].Text:= 'Название';
+
+      Columns.Add;
+      Columns[1].Text:= 'Стоимость';
+
+      AutoSizeIndex:= 0;
+      Height:= 30;
+      Options:= Options + [hoAutoResize, hoOwnerDraw, hoShowHint
+                          , hoShowImages,hoVisible, hoAutoSpring];
+
+      for i := 0 to Pred(Columns.Count) do
+      begin
+        Columns.Items[i].Style:= vsOwnerDraw;
+        Columns.Items[i].CaptionAlignment:= taCenter;
+        if (Columns.Items[i].Position = 1) then Columns.Items[i].Width:= 100;
+      end;
+    end;
+
+  end;
 
 
   with mds_price do
@@ -1315,42 +1434,70 @@ begin
   ActChkStatusMnuVSTExecute(Sender);
 end;
 
-procedure TForm1.vstAdvancedHeaderDraw(Sender: TVTHeader; var PaintInfo: THeaderPaintInfo;
-  const Elements: THeaderPaintElements);
-var
-  r: TRect;//current rectangle
-  i: Integer;
-  cp: TPoint;//center of current rectangle
-  txt: string;//caption text
-  te: TSize;//canvas text extend
-begin
-  //Header.Options = Header.Options + [hoOwnerDraw];
-  if (hpeBackground in Elements) then
-  begin
-    for i := 0 to Pred(Sender.Columns.Count) do
-      if (PaintInfo.Column = Sender.Columns.Items[i]) then
-      begin
-        r:= PaintInfo.PaintRectangle;
-        if (i <> 0)
-          then r.Inflate(1,1,0,0)
-          else r.Inflate(1,1,0,0);
-
-        PaintInfo.TargetCanvas.Brush.Color:= clBtnFace;
-        PaintInfo.TargetCanvas.FillRect(r);
-        PaintInfo.TargetCanvas.Brush.Color:= vst.Colors.TreeLineColor;
-        PaintInfo.TargetCanvas.FrameRect(r);
-
-        //Sender.Columns.Items[i].Style = vsOwnerDraw
-        PaintInfo.TargetCanvas.Brush.Color:= clBtnFace;
-        PaintInfo.TargetCanvas.Font.Color:= clHotLight;
-
-        cp:= r.CenterPoint;
-        txt:= Sender.Columns.Items[i].Text;
-        te:= PaintInfo.TargetCanvas.TextExtent(txt);
-        PaintInfo.TargetCanvas.TextOut(cp.X - te.cx div 2, cp.Y - te.cy div 2, txt);
-      end;
-  end;
-end;
+//procedure TForm1.vstAdvancedHeaderDraw(Sender: TVTHeader; var PaintInfo: THeaderPaintInfo;
+//  const Elements: THeaderPaintElements);
+//var
+//  R, //current rectangle
+//  cR, //rectangle-container
+//  exR: TRect;//rectangle above verticalscroll element
+//  i: Integer;
+//  w: integer;//width of verticalscroll element
+//  cp: TPoint;//center of current rectangle
+//  txt: string;//caption text
+//  te: TSize;//canvas text extend
+//begin
+//  Exit;
+//  //Header.Options = Header.Options + [hoOwnerDraw];
+//  if (hpeBackground in Elements) then
+//  begin
+//    cR:= PaintInfo.PaintRectangle;
+//    if Assigned(PaintInfo.Column)
+//    then
+//      begin
+//        for i := 0 to Pred(Sender.Columns.Count) do
+//          if (PaintInfo.Column = Sender.Columns.Items[i]) then
+//          begin
+//            R:= PaintInfo.PaintRectangle;
+//            if (i = Pred(Sender.Columns.Count)) then cR:= PaintInfo.PaintRectangle;
+//            R.Inflate(1,1,0,0);
+//
+//            PaintInfo.TargetCanvas.Brush.Color:= clBtnFace;
+//            PaintInfo.TargetCanvas.FillRect(R);
+//            PaintInfo.TargetCanvas.Brush.Color:= vst.Colors.TreeLineColor;
+//            PaintInfo.TargetCanvas.FrameRect(R);
+//
+//            //Sender.Columns.Items[i].Style = vsOwnerDraw
+//            PaintInfo.TargetCanvas.Brush.Color:= clBtnFace;
+//            PaintInfo.TargetCanvas.Font.Color:= clHotLight;
+//
+//            cp:= R.CenterPoint;
+//            txt:= Sender.Columns.Items[i].Text;
+//            te:= PaintInfo.TargetCanvas.TextExtent(txt);
+//            PaintInfo.TargetCanvas.TextOut(cp.X - te.cx div 2, cp.Y - te.cy div 2, txt);
+//          end;
+//      end
+//    else
+//      begin
+//        w:= GetSystemMetrics(SM_CYVTHUMB);
+//        exR:= Rect(cR.Right,cR.Top,cR.Right + w,cR.Bottom);
+//        PaintInfo.TargetCanvas.Brush.Color:= clRed;
+//        PaintInfo.TargetCanvas.FillRect(exR);
+//        PaintInfo.TargetCanvas.Brush.Color:= vst.Colors.TreeLineColor;
+//        PaintInfo.TargetCanvas.FrameRect(exR);
+//        Self.Caption:= Format('exR(%d,%d)(%d,%d) | R(%d,%d)(%d,%d)',[
+//              exR.Left,
+//              exR.Top,
+//              exR.Right,
+//              exR.Bottom,
+//              cR.Left,
+//              cR.Top,
+//              cR.Right,
+//              cR.Bottom
+//
+//        ]);
+//      end;
+//  end;
+//end;
 
 procedure TForm1.vstCollapsed(Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
@@ -1568,16 +1715,66 @@ begin
   end;
 end;
 
-procedure TForm1.vstHeaderClick(Sender: TVTHeader; HitInfo: TVTHeaderHitInfo);
+procedure TForm1.vstHeaderDraw(Sender: TVTHeader; HeaderCanvas: TCanvas; Column: TVirtualTreeColumn; R: TRect; Hover,
+  Pressed: Boolean; DropMark: TVTDropMarkMode);
+var
+  i: integer;
+  w: integer;//width of verticalscroll element
+  cp: TPoint;//center of current rectangle
+  txt: string;//caption text
+  te: TSize;//canvas text extend
+  exR, addR: TRect;
+//  bm: TBitmap;
 begin
+//  try
+//    bm:= TBitmap.Create;
+
+    for i := 0 to Pred(Sender.Columns.Count) do
+    begin
+      if (Column = Sender.Columns.Items[i]) then
+      begin
+//        if (i = Pred(Sender.Columns.Count)) then exR:= R;
+
+        R.Inflate(1,1,0,0);
+        HeaderCanvas.Brush.Color:= clBtnFace;
+        HeaderCanvas.FillRect(R);
+        HeaderCanvas.Brush.Color:= vst.Colors.TreeLineColor;
+        HeaderCanvas.FrameRect(R);
+
+        HeaderCanvas.Brush.Color:= clBtnFace;
+        HeaderCanvas.Font.Color:= clHotLight;
+
+        cp:= R.CenterPoint;
+        txt:= Sender.Columns.Items[i].Text;
+        te:= HeaderCanvas.TextExtent(txt);
+        HeaderCanvas.TextOut(cp.X - te.cx div 2, cp.Y - te.cy div 2, txt);
+      end;
+    end;
+
+//    w:= GetSystemMetrics(SM_CYVTHUMB);
+//    bm.Width:= w;
+//    w:= (R.Bottom - R.Top);
+//    bm.Height:= (R.Bottom - R.Top);
 //
+//    exR:= Rect(0,0,bm.Width,bm.Height);
+//    exR:= Rect(R.Right,R.Top,bm.Width,bm.Height);
+//    exR:= ClientToScreen(Rect(0,0,bm.Width,bm.Height));
+//    bm.Canvas.Brush.Color:= clRed;
+//    bm.Canvas.FillRect(exR);
+//    bm.Canvas.Brush.Color:= vst.Colors.TreeLineColor;
+//    bm.Canvas.FrameRect(exR);
+//    vst.Canvas.Draw(R.Right + w,R.Top, bm);
+//  finally
+//    bm.Free;
+//  end;
 end;
 
-procedure TForm1.vstHeaderDrawQueryElements(Sender: TVTHeader; var PaintInfo: THeaderPaintInfo;
-  var Elements: THeaderPaintElements);
-begin
-  Elements:= [hpeBackground, hpeText];
-end;
+//procedure TForm1.vstHeaderDrawQueryElements(Sender: TVTHeader; var PaintInfo: THeaderPaintInfo;
+//  var Elements: THeaderPaintElements);
+//begin
+//  Exit;
+//  Elements:= [hpeBackground, hpeText];
+//end;
 
 procedure TForm1.vstInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode;
   var InitialStates: TVirtualNodeInitStates);
