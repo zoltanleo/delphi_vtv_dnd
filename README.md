@@ -2,6 +2,12 @@
 
 VTV Manipulation Project
 
+#### 1.0.13
+- it is prohibited to change the names of existing price list items
+- added functionality for adding/editing price list
+
+![](pict/vtv_dnd_13.gif)
+
 #### 1.0.12
 - own rendering of the VTV header implemented on HeaderDraw event instead of AdvancedHeaderDraw event
 - implemented showing/hiding "deleted" nodes

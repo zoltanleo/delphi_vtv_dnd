@@ -3,7 +3,7 @@ object Form1: TForm1
   Top = 0
   Caption = 'Form1'
   ClientHeight = 471
-  ClientWidth = 848
+  ClientWidth = 929
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -14,22 +14,22 @@ object Form1: TForm1
   OnCreate = FormCreate
   OnShow = FormShow
   TextHeight = 15
-  object pnlTblPrice: TPanel
+  object pnlTbl: TPanel
     Left = 0
     Top = 0
-    Width = 353
+    Width = 297
     Height = 471
     Align = alLeft
-    Caption = 'pnlTblPrice'
+    Caption = 'pnlTbl'
     TabOrder = 0
     ExplicitHeight = 470
     DesignSize = (
-      353
+      297
       471)
     object DBGridEh1: TDBGridEh
       Left = 9
       Top = 48
-      Width = 337
+      Width = 281
       Height = 414
       Anchors = [akLeft, akTop, akRight, akBottom]
       DataSource = ds_price
@@ -41,18 +41,18 @@ object Form1: TForm1
     object pnlPrices: TPanel
       Left = 1
       Top = 1
-      Width = 351
+      Width = 295
       Height = 41
       Align = alTop
       Caption = 'pnlPrices'
       TabOrder = 1
       DesignSize = (
-        351
+        295
         41)
       object cbbPrice: TComboBox
         Left = 8
         Top = 8
-        Width = 279
+        Width = 194
         Height = 23
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
@@ -60,16 +60,16 @@ object Form1: TForm1
         OnChange = cbbPriceChange
       end
       object btnPriceAdd: TButton
-        Left = 293
+        Left = 208
         Top = 8
         Width = 23
         Height = 23
-        Action = actPriceFill
+        Action = actPriceAdd
         Anchors = [akTop, akRight]
         TabOrder = 1
       end
       object btnPriceDel: TButton
-        Left = 322
+        Left = 266
         Top = 8
         Width = 23
         Height = 23
@@ -77,42 +77,51 @@ object Form1: TForm1
         Anchors = [akTop, akRight]
         TabOrder = 2
       end
+      object Button1: TButton
+        Left = 237
+        Top = 8
+        Width = 23
+        Height = 23
+        Action = actPriceEdt
+        Anchors = [akTop, akRight]
+        TabOrder = 3
+      end
     end
   end
-  object Panel3: TPanel
-    Left = 353
+  object pnlTree: TPanel
+    Left = 297
     Top = 0
-    Width = 495
+    Width = 632
     Height = 471
     Align = alClient
-    Caption = 'Panel3'
+    Caption = 'pnlTree'
     TabOrder = 1
-    ExplicitWidth = 491
+    ExplicitWidth = 628
     ExplicitHeight = 470
     object pnlEdtNodeData: TPanel
       Left = 1
       Top = 1
-      Width = 493
+      Width = 630
       Height = 41
       Align = alTop
       Caption = 'pnlEdtNodeData'
       TabOrder = 0
-      ExplicitWidth = 489
+      ExplicitWidth = 626
       object pnlItemEdt: TPanel
-        Left = 320
+        Left = 457
         Top = 1
         Width = 172
         Height = 39
         Align = alRight
         Caption = 'pnlItemEdt'
         TabOrder = 0
-        ExplicitLeft = 316
+        ExplicitLeft = 453
         DesignSize = (
           172
           39)
         object Button2: TButton
           Left = 8
-          Top = 7
+          Top = 9
           Width = 75
           Height = 25
           Action = ActNodeDataSave
@@ -121,7 +130,7 @@ object Form1: TForm1
         end
         object Button3: TButton
           Left = 89
-          Top = 7
+          Top = 9
           Width = 75
           Height = 25
           Action = ActNodeDataCancel
@@ -130,20 +139,20 @@ object Form1: TForm1
         end
       end
       object pnlEdtCost: TPanel
-        Left = 168
+        Left = 304
         Top = 1
-        Width = 152
+        Width = 153
         Height = 39
         Align = alRight
         Caption = 'pnlEdtCost'
         TabOrder = 1
-        ExplicitLeft = 164
+        ExplicitLeft = 300
         DesignSize = (
-          152
+          153
           39)
         object edtPriceCost: TEdit
-          Left = 3
-          Top = 7
+          Left = 4
+          Top = 8
           Width = 121
           Height = 23
           Anchors = [akTop, akRight]
@@ -153,8 +162,8 @@ object Form1: TForm1
           OnKeyPress = edtPriceCostKeyPress
         end
         object udPriceCost: TUpDown
-          Left = 124
-          Top = 7
+          Left = 125
+          Top = 8
           Width = 16
           Height = 23
           Anchors = [akTop, akRight]
@@ -170,45 +179,64 @@ object Form1: TForm1
       object pnlPriceNameEdt: TPanel
         Left = 1
         Top = 1
-        Width = 167
+        Width = 231
         Height = 39
         Align = alClient
         Caption = 'pnlPriceNameEdt'
         TabOrder = 2
-        ExplicitWidth = 163
+        ExplicitWidth = 227
         DesignSize = (
-          167
+          231
           39)
         object edtPriceName: TEdit
           Left = 7
           Top = 8
-          Width = 154
+          Width = 218
           Height = 23
           Anchors = [akLeft, akTop, akRight]
           TabOrder = 0
           Text = 'edtPriceName'
-          ExplicitWidth = 150
+          ExplicitWidth = 214
+        end
+      end
+      object pnlEdtCodeLiter: TPanel
+        Left = 232
+        Top = 1
+        Width = 72
+        Height = 39
+        Align = alRight
+        Caption = 'pnlEdtCodeLiter'
+        TabOrder = 3
+        ExplicitLeft = 228
+        object edtCodeLiter: TEdit
+          Left = 7
+          Top = 8
+          Width = 59
+          Height = 23
+          TabOrder = 0
+          Text = 'edtCodeLiter'
+          OnKeyPress = edtCodeLiterKeyPress
         end
       end
     end
     object pnlTreeView: TPanel
       Left = 1
-      Top = 97
-      Width = 493
-      Height = 373
+      Top = 132
+      Width = 630
+      Height = 338
       Align = alClient
       Caption = 'pnlTreeView'
       TabOrder = 1
-      ExplicitWidth = 489
-      ExplicitHeight = 372
+      ExplicitWidth = 626
+      ExplicitHeight = 337
       DesignSize = (
-        493
-        373)
+        630
+        338)
       object vst: TVirtualStringTree
         Left = 5
         Top = 6
-        Width = 399
-        Height = 360
+        Width = 536
+        Height = 325
         Anchors = [akLeft, akTop, akRight, akBottom]
         DragMode = dmAutomatic
         DragOperations = [doCopy, doMove, doLink]
@@ -250,65 +278,87 @@ object Form1: TForm1
           end>
       end
       object btnRootAdd: TButton
-        Left = 410
+        Left = 547
         Top = 6
         Width = 75
         Height = 25
         Action = ActRootAdd
         Anchors = [akTop, akRight]
         TabOrder = 1
-        ExplicitLeft = 406
+        ExplicitLeft = 543
       end
       object btnChildAdd: TButton
-        Left = 410
+        Left = 547
         Top = 37
         Width = 75
         Height = 25
         Action = ActChildAdd
         Anchors = [akTop, akRight]
         TabOrder = 2
-        ExplicitLeft = 406
+        ExplicitLeft = 543
       end
       object btnNodeEdt: TButton
-        Left = 410
+        Left = 547
         Top = 68
         Width = 75
         Height = 25
         Action = ActNodeEdt
         Anchors = [akTop, akRight]
         TabOrder = 3
-        ExplicitLeft = 406
+        ExplicitLeft = 543
       end
       object btnNodeDel: TButton
-        Left = 410
+        Left = 547
         Top = 99
         Width = 75
         Height = 25
         Action = ActNodeDel
         Anchors = [akTop, akRight]
         TabOrder = 4
-        ExplicitLeft = 406
+        ExplicitLeft = 543
       end
       object btnNodeRestore: TButton
-        Left = 410
+        Left = 547
         Top = 130
         Width = 75
         Height = 25
         Action = ActNodeRestore
         Anchors = [akTop, akRight]
         TabOrder = 5
-        ExplicitLeft = 406
+        ExplicitLeft = 543
+      end
+      object Button4: TButton
+        Left = 547
+        Top = 275
+        Width = 75
+        Height = 25
+        Action = actPriceSave
+        Anchors = [akRight, akBottom]
+        TabOrder = 6
+        ExplicitLeft = 543
+        ExplicitTop = 274
+      end
+      object Button5: TButton
+        Left = 547
+        Top = 306
+        Width = 75
+        Height = 25
+        Action = actPriceCancel
+        Anchors = [akRight, akBottom]
+        TabOrder = 7
+        ExplicitLeft = 543
+        ExplicitTop = 305
       end
     end
     object Panel1: TPanel
       Left = 1
       Top = 42
-      Width = 493
+      Width = 630
       Height = 55
       Align = alTop
       Caption = 'Panel1'
       TabOrder = 2
-      ExplicitWidth = 489
+      ExplicitWidth = 626
       object chbSetZeroCost: TCheckBox
         Left = 5
         Top = 6
@@ -335,6 +385,29 @@ object Form1: TForm1
         Caption = 'Hide deleted node'
         TabOrder = 2
         OnClick = chbHideDelNodeClick
+      end
+    end
+    object pnlSetPriceName: TPanel
+      Left = 1
+      Top = 97
+      Width = 630
+      Height = 35
+      Align = alTop
+      Caption = 'pnlSetPriceName'
+      TabOrder = 3
+      ExplicitWidth = 626
+      DesignSize = (
+        630
+        35)
+      object edtSetPriceName: TEdit
+        Left = 5
+        Top = 6
+        Width = 617
+        Height = 23
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 0
+        Text = 'edtSetPriceName'
+        ExplicitWidth = 613
       end
     end
   end
@@ -378,12 +451,13 @@ object Form1: TForm1
     Top = 80
     object actPriceFill: TAction
       Category = 'price'
-      Caption = '+'
+      Caption = 'actPriceFill'
       OnExecute = actPriceFillExecute
     end
     object actPriceDel: TAction
       Category = 'price'
       Caption = '-'
+      OnExecute = actPriceDelExecute
     end
     object ActRootAdd: TAction
       Category = 'Node'
@@ -460,6 +534,36 @@ object Form1: TForm1
       Category = 'ppmVST'
       Caption = 'ActChkStatusMnuVST'
       OnExecute = ActChkStatusMnuVSTExecute
+    end
+    object actPriceEdt: TAction
+      Category = 'price'
+      Caption = '...'
+      OnExecute = actPriceEdtExecute
+    end
+    object actPriceAdd: TAction
+      Category = 'price'
+      Caption = '+'
+      OnExecute = actPriceAddExecute
+    end
+    object actTreeShowOn: TAction
+      Category = 'price'
+      Caption = 'actTreeShowOn'
+      OnExecute = actTreeShowOnExecute
+    end
+    object actTreeShowOff: TAction
+      Category = 'price'
+      Caption = 'actTreeShowOff'
+      OnExecute = actTreeShowOffExecute
+    end
+    object actPriceSave: TAction
+      Category = 'price'
+      Caption = 'Price Save'
+      OnExecute = actPriceSaveExecute
+    end
+    object actPriceCancel: TAction
+      Category = 'price'
+      Caption = 'Price Cancel'
+      OnExecute = actPriceCancelExecute
     end
   end
   object mds_labor: TMemTableEh
