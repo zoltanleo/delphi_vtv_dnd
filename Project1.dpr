@@ -2,7 +2,8 @@
 
 uses
   Vcl.Forms,
-  Unit1 in 'Unit1.pas' {Form1};
+  Unit1 in 'Unit1.pas' {Form1},
+  uItem in 'uItem.pas' {frmItem};
 
 {$R *.res}
 
@@ -10,5 +11,6 @@ begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TForm1, Form1);
+  Application.CreateForm(TfrmItem, frmItem);
   Application.Run;
 end.

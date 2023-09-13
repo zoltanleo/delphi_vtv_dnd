@@ -2,6 +2,12 @@
 
 VTV Manipulation Project
 
+#### 1.0.14
+- redundant functionality is limited (rejection of d'n'd)
+- implemented a list of possible selection of items for parent and child nodes when filling in the tree
+
+![](pict/vtv_dnd_14.gif)
+
 #### 1.0.13
 - it is prohibited to change the names of existing price list items
 - added functionality for adding/editing price list

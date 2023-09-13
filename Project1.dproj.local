@@ -1,2 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<BorlandProject/>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899.12.30 00:00:00.000.850,C:\proj\test_delphi\delphi_vtv_dnd\uItem.pas=C:\proj\test_delphi\delphi_vtv_dnd\Unit2.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.178,=C:\proj\test_delphi\delphi_vtv_dnd\Unit2.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.850,C:\proj\test_delphi\delphi_vtv_dnd\uItem.dfm=C:\proj\test_delphi\delphi_vtv_dnd\Unit2.dfm</Transaction>
+  </Transactions>
+</BorlandProject>

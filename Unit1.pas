@@ -8,12 +8,21 @@ uses
   ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh, FIBQuery, pFIBQuery, FIBDatabase, pFIBDatabase, EhLibVCL, GridsEh,
   DBAxisGridsEh, DBGridEh, fib, Vcl.ComCtrls, VirtualTrees, Vcl.ExtCtrls, System.Actions, Vcl.ActnList
   , Winapi.ActiveX, Vcl.Samples.Spin, Vcl.Menus
+  , Generics.Collections
+  , System.UITypes
   ;
 
 type
   TTreeChangeType = (tctExisting, tctDeleted, tctInserted, tctUpdated);
   TEditMode = (emAdd, emEdit);
   TActionNodeSender = (ansNodeRoot, ansNodeChild, ansNodeEdit);
+
+//  PTreeItem = ^TTreeItem;
+//  TTreeItem = record
+//    ItemID: Integer;
+//    ItemName: string;
+//    ItemLiter: string;
+//  end;
 
   PMyRec = ^TMyRec;
   TMyRec = record
@@ -100,12 +109,14 @@ type
     edtSetPriceName: TEdit;
     actTreeShowOn: TAction;
     actTreeShowOff: TAction;
-    Button4: TButton;
-    Button5: TButton;
+    btnPriceSave: TButton;
+    btnPriceCancel: TButton;
     actPriceSave: TAction;
     actPriceCancel: TAction;
     pnlEdtCodeLiter: TPanel;
     edtCodeLiter: TEdit;
+    btnItemSelect: TButton;
+    ActItemSelect: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure cbbPriceChange(Sender: TObject);
@@ -165,6 +176,7 @@ type
     procedure actPriceSaveExecute(Sender: TObject);
     procedure actPriceDelExecute(Sender: TObject);
     procedure edtCodeLiterKeyPress(Sender: TObject; var Key: Char);
+    procedure ActItemSelectExecute(Sender: TObject);
   private
     FClinicID: Integer;
     FPeolpeID: Integer;
@@ -197,6 +209,18 @@ const
   repPath = 'c:\proj\test_delphi\db_test\reports\';
   cPriceName = 'Прайс Биомед 01.03.2022';
   RepDSFilter = '(LABORISSUE_ID=2) OR (LABORISSUE_ID=3)';
+
+  SQLTextTblItemsSelect =
+    'SELECT ' +
+        'LI.LABORISSUE_ID, ' +
+        'LI.LABORISSUE_NAME, ' +
+        'LI.LABORISSUE_CODELITER, ' +
+        'BP.BASEPRICE_ID, ' +
+        'BP.BASEPRICE_PROC_NAME ' +
+    'FROM TBL_BASEPRICE BP ' +
+       'INNER JOIN TBL_LABORISSUE LI ' +
+       'ON (BP.BASEPRICE_PROC_ISSUE_FK = LI.LABORISSUE_ID) ' +
+    'WHERE LI.LABORISSUE_NAME = :LABORISSUE_NAME';
 
   SQLTextTblPriceSelect =
     'SELECT ' +
@@ -342,6 +366,8 @@ implementation
 
 {$R *.dfm}
 
+uses uItem;
+
 procedure TForm1.ActRootAddExecute(Sender: TObject);
 var
   NodeLvl: Integer;
@@ -364,20 +390,9 @@ end;
 
 procedure TForm1.actTreeShowOffExecute(Sender: TObject);
 begin
-//  FillCbbPrice(Sender);
-//  cbbPriceChange(Sender);
-
-
   EditMode:= emEdit;
   pnlTbl.Visible:= True;
   pnlTree.Visible:= not pnlTbl.Visible;
-//  actPriceFillExecute(Sender);
-
-//  chbSetZeroCost.Enabled:= (EditMode = emAdd);
-//  chbShowUpdatedPrice.Enabled:= (EditMode = emEdit);
-//
-//  vst.FullExpand(nil);
-//  actEdtNodeDataOffExecute(Sender);
 end;
 
 procedure TForm1.actTreeShowOnExecute(Sender: TObject);
@@ -428,7 +443,7 @@ begin
           ActNodeDel.Enabled:= (Data^.CurrentChangeType <> tctDeleted);
           ActNodeRestore.Enabled:= (Data^.CurrentChangeType = tctDeleted);
 
-          if (Data^.CurrentChangeType <> tctPresent)
+          if (Data^.CurrentChangeType <> tctExisting)
             then ActNodeEdt.Enabled:= (Data^.CurrentChangeType <> tctDeleted)
             else ActNodeEdt.Enabled:= ((Data^.CurrentChangeType <> tctDeleted) and (NodeLvl > 0));
 
@@ -473,6 +488,8 @@ begin
   btnNodeEdt.Enabled:= ActNodeEdt.Enabled;
   btnNodeDel.Enabled:= ActNodeDel.Enabled;
   btnNodeRestore.Enabled:= ActNodeRestore.Enabled;
+  btnPriceSave.Enabled:= actPriceSave.Enabled;
+  btnPriceCancel.Enabled:= actPriceCancel.Enabled;
 end;
 
 procedure TForm1.ActChkStatusBtnUpdate(Sender: TObject);
@@ -581,6 +598,8 @@ begin
     ActChildAdd.Enabled:= not IsEdit;
     ActNodeEdt.Enabled:= not IsEdit;
     ActNodeDel.Enabled:= not IsEdit;
+    actPriceSave.Enabled:= not IsEdit;
+    actPriceCancel.Enabled:= not IsEdit;
   finally
     vst.EndUpdate;
     ActChkStatusBtnExecute(Sender);
@@ -607,6 +626,223 @@ begin
   ActChildAdd.Enabled:= not IsEdit;
   ActNodeEdt.Enabled:= not IsEdit;
   ActNodeDel.Enabled:= not IsEdit;
+  actPriceSave.Enabled:= not IsEdit;
+  actPriceCancel.Enabled:= not IsEdit;
+end;
+
+procedure TForm1.ActItemSelectExecute(Sender: TObject);
+var
+  tmpFrm: TfrmItem;
+  srcNode, destNode: PVirtualNode;
+  destData: PTreeItem;
+  srcData: PMyRec;
+  NodeLvl: Integer;
+
+  procedure FillIssue;
+  begin
+    with tmpFrm do
+    begin
+      try
+        if mds_issue.Active
+          then mds_issue.EmptyTable
+          else mds_issue.Active:= True;
+
+        tmpTrans.StartTransaction;
+        tmpQry.Close;
+        tmpQry.SQL.Text:= SQLTextTblLaborIssueSelect;
+        tmpQry.ExecQuery;
+
+        while not tmpQry.Eof do
+        begin
+          mds_issue.AppendRecord([
+              tmpQry.FieldByName('LABORISSUE_ID').AsInteger,
+              tmpQry.FieldByName('LABORISSUE_NAME').AsString,
+              tmpQry.FieldByName('LABORISSUE_CODELITER').AsString
+                                 ]);
+          tmpQry.Next;
+        end;
+
+        tmpTrans.Commit;
+
+        if (vst.RootNodeCount > 0) then
+        begin
+          srcNode:= vst.GetFirst;
+
+          while Assigned(srcNode) do
+          begin
+            srcData:= vst.GetNodeData(srcNode);
+
+            if Assigned(srcData) then
+              if mds_issue.Locate('LABORISSUE_NAME',srcData.PriceName,[loCaseInsensitive])
+                then mds_issue.Delete;
+
+            srcNode:= srcNode.NextSibling;
+          end;
+        end;
+
+        try
+          PriceTree.BeginUpdate;
+          PriceTree.Clear;
+
+          if mds_issue.IsEmpty then Exit;
+
+          mds_issue.First;
+
+          while not mds_issue.Eof do
+          begin
+            destNode:= PriceTree.AddChild(nil);
+            destData:= PriceTree.GetNodeData(destNode);
+            if Assigned(destData) then
+            begin
+              destData.ItemID:= mds_issue.FieldByName('LABORISSUE_ID').AsInteger;
+              destData.ItemName:= mds_issue.FieldByName('LABORISSUE_NAME').AsString;
+              destData.ItemLiter:= mds_issue.FieldByName('LABORISSUE_CODELITER').AsString;
+            end;
+            mds_issue.Next;
+          end;
+        finally
+          PriceTree.EndUpdate;
+        end;
+      except
+        on E: EFIBError do
+        begin
+          tmpTrans.Rollback;
+          Application.MessageBox(PChar(E.Message), 'Ошибка доступа к данным', MB_ICONERROR);
+        end;
+      end;
+    end;
+  end;
+
+  procedure FillItems;
+//  var
+//    NodeLvl: Integer;
+  begin
+    if not Assigned(NodeSender) then Exit;
+    NodeLvl:= vst.GetNodeLevel(NodeSender);
+
+    case NodeLvl of
+      0: srcNode:= NodeSender;
+      1: srcNode:= NodeSender.Parent;
+    end;
+
+    with tmpFrm do
+    begin
+      try
+        if mds_items.Active
+          then mds_items.EmptyTable
+          else mds_items.Active:= True;
+
+        srcData:= vst.GetNodeData(srcNode);
+
+        if Assigned(srcData) then
+        begin
+          tmpTrans.StartTransaction;
+          tmpQry.Close;
+          tmpQry.SQL.Text:= SQLTextTblItemsSelect;
+          tmpQry.Prepare;
+          tmpQry.ParamByName('LABORISSUE_NAME').Value:= srcdata.PriceName;
+          tmpQry.ExecQuery;
+
+          while not tmpQry.Eof do
+          begin
+            mds_items.AppendRecord([
+                tmpQry.FieldByName('LABORISSUE_ID').AsInteger,
+                tmpQry.FieldByName('LABORISSUE_NAME').AsString,
+                tmpQry.FieldByName('LABORISSUE_CODELITER').AsString,
+                tmpQry.FieldByName('BASEPRICE_ID').AsInteger,
+                tmpQry.FieldByName('BASEPRICE_PROC_NAME').AsString
+                                    ]);
+            tmpQry.Next;
+          end;
+
+          tmpTrans.Commit;
+
+          if (srcNode^.ChildCount > 0) then
+          begin
+            srcNode:= srcNode.FirstChild;
+
+            while Assigned(srcNode) do
+            begin
+              srcData:= vst.GetNodeData(srcNode);
+              if Assigned(srcData) then
+                if mds_items.Locate('BASEPRICE_PROC_NAME',srcData.PriceName,[loCaseInsensitive])
+                  then mds_items.Delete;
+
+              srcNode:= srcNode.NextSibling;
+            end;
+          end;
+
+          try
+            PriceTree.BeginUpdate;
+            PriceTree.Clear;
+
+            if mds_items.IsEmpty then Exit;
+
+            mds_items.First;
+
+            while not mds_items.Eof do
+            begin
+              destNode:= PriceTree.AddChild(nil);
+              destData:= PriceTree.GetNodeData(destNode);
+
+              if Assigned(destData) then
+              begin
+                destData.ItemID:= mds_items.FieldByName('BASEPRICE_ID').AsInteger;
+                destData.ItemName:= mds_items.FieldByName('BASEPRICE_PROC_NAME').AsString;
+                destData.ItemLiter:= '';
+              end;
+
+              mds_items.Next;
+            end;
+          finally
+            PriceTree.EndUpdate;
+          end;
+        end;
+      except
+        on E: EFIBError do
+        begin
+          tmpTrans.Rollback;
+          Application.MessageBox(PChar(E.Message), 'Ошибка доступа к данным', MB_ICONERROR);
+        end;
+      end;
+    end;
+  end;
+
+begin
+  srcNode:= nil;
+  destNode:= nil;
+  srcData:= nil;
+  destData:= nil;
+
+  tmpFrm:= TfrmItem.Create(Self);
+  try
+    with tmpFrm do
+    begin
+      case ActionNodeSender of
+        ansNodeRoot: FillIssue;
+        ansNodeChild: FillItems;
+        ansNodeEdit:
+          begin
+            NodeLvl:= vst.GetNodeLevel(NodeSender);
+
+            case NodeLvl of
+              0: FillIssue; //it's not really possible, but... suddenly the incredible will happen :)
+              1: FillItems;
+            end;
+          end;
+      end;
+
+      lblEmptyWarninig.Visible:= (PriceTree.RootNodeCount = 0);
+      ShowModal;
+
+      if (ModalResult = mrOk) then
+      begin
+
+      end;
+    end;
+  finally
+    FreeAndNil(tmpFrm);
+  end;
 end;
 
 procedure TForm1.actNodeCollapsExecute(Sender: TObject);
@@ -640,6 +876,8 @@ var
   tmpCurr: Currency;
   fs: TFormatSettings;
 begin
+  Node:= nil;
+
   if (Trim(edtPriceName.Text) = '') then
   begin
     Application.MessageBox('Поле не может быть пустым!','Некорректные данные',MB_ICONINFORMATION);
@@ -874,7 +1112,7 @@ begin
   edtPriceName.Text:= Data^.PriceName;
 
   case NodeLvl of
-    0: if (Data.CurrentChangeType <> tctPresent) then edtCodeLiter.Text:= UpperCase(Data.CodeLiter, loUserLocale);
+    0: if (Data.CurrentChangeType <> tctExisting) then edtCodeLiter.Text:= UpperCase(Data.CodeLiter, loUserLocale);
     1:
       begin
         fs:= TFormatSettings.Create;
@@ -1035,6 +1273,8 @@ var
   RootID: Integer;//parent ID of current Node
 
 begin
+  NodeID:= -1;
+  RootID:= -1;
   if not mds_price.Active then Exit;
 
   try
@@ -1090,7 +1330,7 @@ begin
         Node:= vst.AddChild(nil);
         Data:= vst.GetNodeData(Node);
         RootID:= 0;
-        FTreeChangeType:= tctPresent;
+        FTreeChangeType:= tctExisting;
 
         case EditMode of
           emAdd:
@@ -1155,7 +1395,6 @@ begin
     mds_price.EnableControls;
     vst.EndUpdate;
   end;
-
 end;
 
 procedure TForm1.actPriceSaveExecute(Sender: TObject);
@@ -1332,7 +1571,8 @@ end;
 
 procedure TForm1.edtCodeLiterKeyPress(Sender: TObject; var Key: Char);
 begin
-  if not (Key in ['A'..'Z','a'..'z']) then Key:= #0;
+//  if not (Key in ['A'..'Z','a'..'z']) then Key:= #0;
+  if not CharInSet(Key,['A'..'Z','a'..'z']) then Key:= #0;
 end;
 
 procedure TForm1.edtPriceCostChange(Sender: TObject);
@@ -1366,7 +1606,8 @@ var
   fs: TFormatSettings;
 begin
   fs:= TFormatSettings.Create;
-  if not (Key in ['0'..'9','-',fs.DecimalSeparator]) then Key:= #0;
+//  if not (Key in ['0'..'9','-',fs.DecimalSeparator]) then Key:= #0;
+  if not CharInSet(Key,['0'..'9','-',fs.DecimalSeparator]) then Key:= #0;
 end;
 
 procedure TForm1.FillCbbPrice(Sender: TObject);
@@ -1605,16 +1846,6 @@ begin
       cbbPriceChange(Sender);
 
       actTreeShowOffExecute(Sender);
-//
-//      EditMode:= emEdit;
-//      pnlTblPrice.Visible:= False;
-//      actPriceFillExecute(Sender);
-//
-//      chbSetZeroCost.Enabled:= (EditMode = emAdd);
-//      chbShowUpdatedPrice.Enabled:= (EditMode = emEdit);
-//
-//      vst.FullExpand(nil);
-//      actEdtNodeDataOffExecute(Sender);
     except
       on E: EFIBError do
       begin
@@ -1638,7 +1869,7 @@ begin
     FTreeChangeType:= Data.CurrentChangeType;
 
     case TreeChangeType of
-      tctPresent: ss:= 'tctPresent';
+      tctExisting: ss:= 'tctExisting';
       tctDeleted: ss:= 'tctDeleted';
       tctInserted: ss:= 'tctInserted';
       tctUpdated: ss:= 'tctUpdated';
@@ -1748,6 +1979,7 @@ var
   DataSource: PMyRec;
   i: Integer;
 begin
+  Exit;
 {$REGION 'skiped'}
   //  if (Source <> Sender) then Exit;
 
@@ -1771,6 +2003,10 @@ begin
   //    else ShowMessage('есть root');
 {$ENDREGION}
 //  pSource := TVirtualStringTree(Source).FocusedNode;
+  DataTarget:= nil;
+  DataSource:= nil;
+  attMode:= amNoWhere;
+
   NodeTarget := Sender.DropTargetNode;
   Nodes:= TVirtualStringTree(Source).GetSortedSelection(True);
 
@@ -1837,6 +2073,7 @@ var
   Data: PMyRec;
   drgNode,tgtNode: PVirtualNode;
 begin
+  Exit;
   if (Sender <> Source) then Exit;
   tgtNode:= Sender.DropTargetNode;//node we are above or around
   drgNode:= TBaseVirtualTree(Source).GetFirstSelected;//first dragged node
@@ -2023,7 +2260,9 @@ begin
   if ((NodeLvl = 1) and (vst.Header.Columns.ClickIndex = 1)) then
   begin
     fs:= TFormatSettings.Create;
-    if (Key in ['0'..'9']) then Key:= #0;
+//    if (Key in ['0'..'9']) then Key:= #0;
+    if CharInSet(Key,['0'..'9']) then Key:= #0;
+
   end;
 end;
 
