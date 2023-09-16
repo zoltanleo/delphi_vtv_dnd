@@ -98,7 +98,7 @@ type
     N3: TMenuItem;
     NodeDel1: TMenuItem;
     NodeRestore1: TMenuItem;
-    Panel1: TPanel;
+    pnlTreeSettings: TPanel;
     chbSetZeroCost: TCheckBox;
     chbShowUpdatedPrice: TCheckBox;
     chbHideDelNode: TCheckBox;
@@ -115,8 +115,12 @@ type
     actPriceCancel: TAction;
     pnlEdtCodeLiter: TPanel;
     edtCodeLiter: TEdit;
-    btnItemSelect: TButton;
     ActItemSelect: TAction;
+    pnlItemSelect: TPanel;
+    btnItemSelect: TButton;
+    Label1: TLabel;
+    Label2: TLabel;
+    Label3: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure cbbPriceChange(Sender: TObject);
@@ -187,6 +191,7 @@ type
     FEditMode: TEditMode;
     FActionNodeSender: TActionNodeSender;
     FNodeSender: PVirtualNode;
+    FIsPickedNode: Boolean;
     procedure FillCbbPrice(Sender: TObject);
   public
     property ClinicID: Integer read FClinicID;
@@ -198,6 +203,7 @@ type
     property NodeSender: PVirtualNode read FNodeSender;
     property ActionNodeSender: TActionNodeSender read FActionNodeSender;
     property EditMode: TEditMode read FEditMode write FEditMode;
+    property IsPickedNode: Boolean read FIsPickedNode;
   end;
 
 const
@@ -372,9 +378,8 @@ procedure TForm1.ActRootAddExecute(Sender: TObject);
 var
   NodeLvl: Integer;
 begin
-  actEdtNodeDataOnExecute(Sender);
-  pnlEdtCost.Visible:= False;
-  pnlEdtCodeLiter.Visible:= not pnlEdtCost.Visible;
+//  pnlEdtCost.Visible:= False;
+//  pnlEdtCodeLiter.Visible:= not pnlEdtCost.Visible;
   edtPriceName.Clear;
   edtCodeLiter.Clear;
   edtPriceCost.Text:= '0';
@@ -384,6 +389,8 @@ begin
   if (vst.SelectedCount > 0)
     then FNodeSender:= vst.GetFirstSelected
     else FNodeSender:= nil;
+
+  actEdtNodeDataOnExecute(Sender);
 
   if edtPriceName.CanFocus then edtPriceName.SetFocus;
 end;
@@ -403,7 +410,7 @@ begin
 
   chbSetZeroCost.Enabled:= (EditMode = emAdd);
   chbShowUpdatedPrice.Enabled:= (EditMode = emEdit);
-  pnlSetPriceName.Visible:= (EditMode = emAdd);
+//  pnlSetPriceName.Visible:= (EditMode = emAdd);
 
   actEdtNodeDataOffExecute(Sender);
   vst.FullExpand(nil);
@@ -580,44 +587,51 @@ var
   i: Integer;
   IsEdit: Boolean;
 begin
-  vst.BeginUpdate;
-  try
-    vst.Refresh;
-    IsEdit:= False;
+  vst.Refresh;
+  IsEdit:= False;
 
-    for I := 0 to  Pred(pnlTreeView.ControlCount) do
-    begin
-      if TObject(pnlTreeView.Controls[i]).InheritsFrom(TButton) then
-        TButton(pnlTreeView.Controls[i]).Enabled:= not IsEdit;
-    end;
-
-    vst.Enabled:= not IsEdit;
-    pnlEdtNodeData.Visible:= IsEdit;
-
-    ActRootAdd.Enabled:= not IsEdit;
-    ActChildAdd.Enabled:= not IsEdit;
-    ActNodeEdt.Enabled:= not IsEdit;
-    ActNodeDel.Enabled:= not IsEdit;
-    actPriceSave.Enabled:= not IsEdit;
-    actPriceCancel.Enabled:= not IsEdit;
-  finally
-    vst.EndUpdate;
-    ActChkStatusBtnExecute(Sender);
+  for I := 0 to  Pred(pnlTreeView.ControlCount) do
+  begin
+    if TObject(pnlTreeView.Controls[i]).InheritsFrom(TButton) then
+      TButton(pnlTreeView.Controls[i]).Enabled:= not IsEdit;
   end;
+  pnlTreeSettings.Enabled:= not IsEdit;
+  vst.Enabled:= not IsEdit;
+
+  pnlEdtNodeData.Visible:= IsEdit;
+  pnlSetPriceName.Visible:= (not IsEdit and (EditMode = emAdd));
+
+  ActRootAdd.Enabled:= not IsEdit;
+  ActChildAdd.Enabled:= not IsEdit;
+  ActNodeEdt.Enabled:= not IsEdit;
+  ActNodeDel.Enabled:= not IsEdit;
+  actPriceSave.Enabled:= not IsEdit;
+  actPriceCancel.Enabled:= not IsEdit;
+
+  pnlItemSelect.Align:= alNone;
+  pnlEdtCost.Align:= alNone;
+  pnlEdtCodeLiter.Align:= alNone;
+
+  ActChkStatusBtnExecute(Sender);
+
 end;
 
 procedure TForm1.actEdtNodeDataOnExecute(Sender: TObject);
 var
-  i: Integer;
+  i, NodeLvl: Integer;
   IsEdit: Boolean;
 begin
   IsEdit:= True;
+  FIsPickedNode:= False;
 
-  for I := 0 to  Pred(pnlTree.ControlCount) do
+  for i := 0 to  Pred(pnlTree.ControlCount) do
   begin
     if TObject(pnlTree.Controls[i]).InheritsFrom(TButton) then
       TButton(pnlTree.Controls[i]).Enabled:= not IsEdit;
   end;
+
+  pnlTreeSettings.Visible:= not IsEdit;
+  pnlSetPriceName.Visible:= not IsEdit;
 
   vst.Enabled:= not IsEdit;
   pnlEdtNodeData.Visible:= IsEdit;
@@ -628,6 +642,31 @@ begin
   ActNodeDel.Enabled:= not IsEdit;
   actPriceSave.Enabled:= not IsEdit;
   actPriceCancel.Enabled:= not IsEdit;
+  ActItemSelect.Enabled:= (ActionNodeSender <> ansNodeEdit);
+  pnlItemSelect.Visible:= ActItemSelect.Enabled;
+
+  case ActionNodeSender of
+    ansNodeRoot:
+      begin
+        pnlEdtCost.Visible:= False;
+        pnlEdtCodeLiter.Visible:= not pnlEdtCost.Visible;
+      end;
+    ansNodeChild:
+      begin
+        pnlEdtCost.Visible:= True;
+        pnlEdtCodeLiter.Visible:= not pnlEdtCost.Visible;
+      end;
+    ansNodeEdit:
+      begin
+        NodeLvl:= vst.GetNodeLevel(NodeSender);
+        pnlEdtCost.Visible:= (NodeLvl = 1);
+        pnlEdtCodeLiter.Visible:= (NodeLvl <> 1);
+      end;
+  end;
+
+  pnlItemSelect.Align:= alRight;
+  pnlEdtCost.Align:= alRight;
+  pnlEdtCodeLiter.Align:= alRight;
 end;
 
 procedure TForm1.ActItemSelectExecute(Sender: TObject);
@@ -821,15 +860,7 @@ begin
       case ActionNodeSender of
         ansNodeRoot: FillIssue;
         ansNodeChild: FillItems;
-        ansNodeEdit:
-          begin
-            NodeLvl:= vst.GetNodeLevel(NodeSender);
-
-            case NodeLvl of
-              0: FillIssue; //it's not really possible, but... suddenly the incredible will happen :)
-              1: FillItems;
-            end;
-          end;
+        ansNodeEdit: Exit;
       end;
 
       lblEmptyWarninig.Visible:= (PriceTree.RootNodeCount = 0);
@@ -837,8 +868,35 @@ begin
 
       if (ModalResult = mrOk) then
       begin
+        destNode:= PriceTree.GetFirstSelected;
+        if not Assigned(destNode) then Exit;
 
+        destData:= PriceTree.GetNodeData(destNode);
+        if Assigned(destData) then
+        begin
+          edtPriceName.Text:= destData.ItemName;
+
+
+          case ActionNodeSender of
+            ansNodeRoot:
+              begin
+                 edtCodeLiter.Text:= UpperCase(destData.ItemLiter,loUserLocale);
+                 edtPriceCost.Clear;
+                 udPriceCost.Position:= 0;
+              end;
+            ansNodeChild:
+              begin
+                edtCodeLiter.Clear;
+                edtPriceCost.Text:= '0';
+                udPriceCost.Position:= 0;
+                edtPriceCostChange(Sender);
+              end;
+            ansNodeEdit: Exit;
+          end;
+        end;
       end;
+
+      FIsPickedNode:= (ModalResult = mrOk);
     end;
   finally
     FreeAndNil(tmpFrm);
@@ -875,6 +933,7 @@ var
 //  aa: Integer;
   tmpCurr: Currency;
   fs: TFormatSettings;
+
 begin
   Node:= nil;
 
@@ -882,13 +941,6 @@ begin
   begin
     Application.MessageBox('Поле не может быть пустым!','Некорректные данные',MB_ICONINFORMATION);
     if edtPriceName.CanFocus then edtPriceName.SetFocus;
-    Exit;
-  end;
-
-  if ((Trim(edtCodeLiter.Text) = '') and (ActionNodeSender = ansNodeRoot)) then
-  begin
-    Application.MessageBox('Поле не может быть пустым!','Некорректные данные',MB_ICONINFORMATION);
-    if edtCodeLiter.CanFocus then edtCodeLiter.SetFocus;
     Exit;
   end;
 
@@ -900,21 +952,32 @@ begin
 //  aa:= CompareText(mds_labor.FieldByName('LABORISSUE_NAME').AsString,Trim(edtPriceName.Text));// <> 0 --> not worked
 //  aa:= CompareText(mds_labor.FieldByName('LABORISSUE_NAME').AsString,Trim(edtPriceName.Text), loUserLocale); = 0 --> worked
 
-  if mds_labor.Locate('LABORISSUE_NAME',Trim(edtPriceName.Text),[loCaseInsensitive]) then
-    if (CompareText(mds_labor.FieldByName('LABORISSUE_NAME').AsString,Trim(edtPriceName.Text), loUserLocale) = 0) then
+  if not IsPickedNode then
+  begin
+    if mds_labor.Locate('LABORISSUE_NAME',Trim(edtPriceName.Text),[loCaseInsensitive]) then
+//      if (CompareText(mds_labor.FieldByName('LABORISSUE_NAME').AsString,Trim(edtPriceName.Text), loUserLocale) = 0) then
     begin
-      Application.MessageBox('В базе данных уже есть раздел с таким названием!','Некорректные данные',MB_ICONINFORMATION);
+      Application.MessageBox('В базе данных уже есть раздел с таким названием! Воспользуйтесь кнопкой выбора справа от панели',
+                            'Некорректные данные',MB_ICONINFORMATION);
       if edtPriceName.CanFocus then edtPriceName.SetFocus;
       Exit
     end;
 
-  if mds_labor.Locate('LABORISSUE_CODELITER',Trim(edtCodeLiter.Text),[loCaseInsensitive]) then
-    if (CompareText(mds_labor.FieldByName('LABORISSUE_CODELITER').AsString,Trim(edtCodeLiter.Text), loUserLocale) = 0) then
+    if mds_labor.Locate('LABORISSUE_CODELITER',Trim(edtCodeLiter.Text),[loCaseInsensitive]) then
+//      if (CompareText(mds_labor.FieldByName('LABORISSUE_CODELITER').AsString,Trim(edtCodeLiter.Text), loUserLocale) = 0) then
     begin
       Application.MessageBox('Литера кода раздела должна быть уникальной!','Некорректные данные',MB_ICONINFORMATION);
       if edtCodeLiter.CanFocus then edtCodeLiter.SetFocus;
       Exit
     end;
+  end;
+
+  if ((Trim(edtCodeLiter.Text) = '') and (ActionNodeSender = ansNodeRoot)) then
+  begin
+    Application.MessageBox('Поле не может быть пустым!','Некорректные данные',MB_ICONINFORMATION);
+    if edtCodeLiter.CanFocus then edtCodeLiter.SetFocus;
+    Exit;
+  end;
 
   case ActionNodeSender of
     ansNodeRoot:
@@ -1101,9 +1164,9 @@ begin
 
   FActionNodeSender:= ansNodeEdit;
 
-  NodeLvl:= vst.GetNodeLevel(NodeSender);
-  pnlEdtCost.Visible:= (NodeLvl = 1);
-  pnlEdtCodeLiter.Visible:= (NodeLvl <> 1);
+//  NodeLvl:= vst.GetNodeLevel(NodeSender);
+//  pnlEdtCost.Visible:= (NodeLvl = 1);
+//  pnlEdtCodeLiter.Visible:= (NodeLvl <> 1);
 
   Data:= vst.GetNodeData(NodeSender);
   if not Assigned(Data) then Exit;
@@ -1119,7 +1182,6 @@ begin
         edtPriceCost.Text:= Format('%2.2f',[Data^.CurrentCost]);
       end;
   end;
-
 end;
 
 procedure TForm1.actNodeExpandExecute(Sender: TObject);
@@ -1221,11 +1283,21 @@ begin
     Exit;
   end;
 
+
   fs:= TFormatSettings.Create;
-  actEdtNodeDataOnExecute(Sender);
 
   pnlEdtCost.Visible:= True;
   pnlEdtCodeLiter.Visible:= not pnlEdtCost.Visible;
+
+  FNodeSender:= vst.GetFirstSelected;
+
+//  NodeLvl:= vst.GetNodeLevel(NodeSender);
+//  pnlEdtCost.Visible:= (NodeLvl = 1);
+//  pnlEdtCodeLiter.Visible:= (NodeLvl <> 1);
+
+  FActionNodeSender:= ansNodeChild;
+  actEdtNodeDataOnExecute(Sender);
+
   edtPriceName.Clear;
   edtCodeLiter.Clear;
   edtPriceCost.Text:= '0';
@@ -1233,9 +1305,6 @@ begin
   if TryStrToCurr(edtPriceCost.Text, tmpCurr,fs)
     then edtPriceCost.Text:= Format('%2.2f',[tmpCurr])
     else edtPriceCost.Clear;
-
-  FNodeSender:= vst.GetFirstSelected;
-  FActionNodeSender:= ansNodeChild;
 
   if edtPriceName.CanFocus then edtPriceName.SetFocus;
 end;
@@ -1696,6 +1765,7 @@ begin
   FTreeChangeType:= tctInserted;
   FNodeSender:= nil;
   EditMode:= emAdd;
+  FIsPickedNode:= False;
   edtPriceName.MaxLength:= 100;
   edtCodeLiter.MaxLength:= 5;
   pnlTbl.Align:= alClient;

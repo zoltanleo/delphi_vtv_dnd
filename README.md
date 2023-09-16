@@ -2,6 +2,9 @@
 
 VTV Manipulation Project
 
+#### 1.0.15
+- added the Is Picked Node public property to distinguish the value selected from the list from the newly entered one
+
 #### 1.0.14
 - redundant functionality is limited (rejection of d'n'd)
 - implemented a list of possible selection of items for parent and child nodes when filling in the tree

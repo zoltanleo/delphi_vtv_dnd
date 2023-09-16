@@ -4,7 +4,8 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees, Vcl.StdCtrls, Vcl.ExtCtrls, MemTableDataEh, Data.DB, MemTableEh
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees, Vcl.StdCtrls, Vcl.ExtCtrls, MemTableDataEh, Data.DB, MemTableEh,
+  System.Actions, Vcl.ActnList
 //  , Unit1
   ;
 
@@ -25,14 +26,18 @@ type
     mds_items: TMemTableEh;
     mds_issue: TMemTableEh;
     lblEmptyWarninig: TLabel;
+    actList: TActionList;
+    actChoice: TAction;
+    actCancel: TAction;
     procedure FormCreate(Sender: TObject);
-    procedure btnCancelClick(Sender: TObject);
-    procedure btnSaveClick(Sender: TObject);
     procedure PriceTreeFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure PriceTreeGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
     procedure PriceTreeGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;
       TextType: TVSTTextType; var CellText: string);
     procedure FormPaint(Sender: TObject);
+    procedure actChoiceExecute(Sender: TObject);
+    procedure actCancelExecute(Sender: TObject);
+    procedure PriceTreeDblClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -46,13 +51,14 @@ implementation
 
 {$R *.dfm}
 
-procedure TfrmItem.btnCancelClick(Sender: TObject);
+procedure TfrmItem.actCancelExecute(Sender: TObject);
 begin
   Self.ModalResult:= mrCancel;
 end;
 
-procedure TfrmItem.btnSaveClick(Sender: TObject);
+procedure TfrmItem.actChoiceExecute(Sender: TObject);
 begin
+  if ((PriceTree.RootNodeCount = 0) or (PriceTree.SelectedCount <> 1)) then Exit;
   Self.ModalResult:= mrOk;
 end;
 
@@ -61,13 +67,13 @@ const
   EmptyContent = 'Список возможного выбора пуст!';
 begin
   Self.ModalResult:= mrCancel;
-
+  actChoice.SecondaryShortCuts.Add('Enter');
+  actChoice.SecondaryShortCuts.Add('Enter+Ctrl');
+  actCancel.SecondaryShortCuts.Add('Esc');
 
   with lblEmptyWarninig do
   begin
     Parent:= PriceTree;
-//    Top:= Parent.Top + Parent.Height div 3;
-//    Left:= (Parent.ClientWidth - Canvas.TextWidth(lblEmptyWarninig.Caption)) div 2;
     Caption:= EmptyContent;
     Font.Color:= clRed;
     Visible:= False;
@@ -97,11 +103,19 @@ begin
     Active := False;
   end;
 
-  with PriceTree.Header do
+  with PriceTree do
   begin
-    Columns.Add;
-    MainColumn:= 0;
-    Options:= Options + [hoAutoResize];
+    TreeOptions.SelectionOptions:= TreeOptions.SelectionOptions
+              + [toExtendedFocus, toFullRowSelect, toAlwaysSelectNode]
+              - []
+              ;
+
+    with Header do
+    begin
+      Columns.Add;
+      MainColumn:= 0;
+      Options:= Options + [hoAutoResize];
+    end;
   end;
 end;
 
@@ -112,6 +126,11 @@ begin
     lblEmptyWarninig.Top:= PriceTree.Top + PriceTree.Height div 3;
     lblEmptyWarninig.Left:= (PriceTree.Width - Canvas.TextWidth(lblEmptyWarninig.Caption)) div 2;
   end;
+end;
+
+procedure TfrmItem.PriceTreeDblClick(Sender: TObject);
+begin
+  actChoiceExecute(Sender);
 end;
 
 procedure TfrmItem.PriceTreeFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
