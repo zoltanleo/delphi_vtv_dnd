@@ -21,6 +21,8 @@ object frmItem: TfrmItem
     Align = alClient
     Caption = 'pnlTree'
     TabOrder = 0
+    ExplicitWidth = 440
+    ExplicitHeight = 385
     DesignSize = (
       444
       386)
@@ -50,6 +52,8 @@ object frmItem: TfrmItem
     Align = alBottom
     Caption = 'pnlBtns'
     TabOrder = 1
+    ExplicitTop = 385
+    ExplicitWidth = 440
     DesignSize = (
       444
       39)
@@ -68,6 +72,7 @@ object frmItem: TfrmItem
       Action = actChoice
       Anchors = [akRight, akBottom]
       TabOrder = 0
+      ExplicitLeft = 277
     end
     object btnCancel: TButton
       Left = 362
@@ -77,6 +82,7 @@ object frmItem: TfrmItem
       Action = actCancel
       Anchors = [akRight, akBottom]
       TabOrder = 1
+      ExplicitLeft = 358
     end
   end
   object mds_items: TMemTableEh

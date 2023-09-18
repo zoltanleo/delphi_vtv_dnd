@@ -110,6 +110,11 @@ begin
               - []
               ;
 
+    TreeOptions.PaintOptions:= TreeOptions.PaintOptions
+              + [toShowHorzGridLines]
+              - [toShowTreeLines]
+              ;
+
     with Header do
     begin
       Columns.Add;

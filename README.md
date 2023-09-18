@@ -2,8 +2,11 @@
 
 VTV Manipulation Project
 
+#### 1.0.16
+- fix some bugs
+
 #### 1.0.15
-- added the Is Picked Node public property to distinguish the value selected from the list from the newly entered one
+- added the IsPickedNode public property to distinguish the value selected from the list from the newly entered one
 
 #### 1.0.14
 - redundant functionality is limited (rejection of d'n'd)

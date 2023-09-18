@@ -41,11 +41,11 @@ type
     tmpTrans: TpFIBTransaction;
     tmpQry: TpFIBQuery;
     ds_price: TDataSource;
-    mds_price: TMemTableEh;
+    mds_common: TMemTableEh;
     actList: TActionList;
     actPriceFill: TAction;
     actPriceDel: TAction;
-    mds_labor: TMemTableEh;
+    mds_laborissue: TMemTableEh;
     mds_src: TMemTableEh;
     pnlTbl: TPanel;
     DBGridEh1: TDBGridEh;
@@ -121,6 +121,8 @@ type
     Label1: TLabel;
     Label2: TLabel;
     Label3: TLabel;
+    mds_baseprice: TMemTableEh;
+    mds_price: TMemTableEh;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure cbbPriceChange(Sender: TObject);
@@ -216,6 +218,90 @@ const
   cPriceName = 'Прайс Биомед 01.03.2022';
   RepDSFilter = '(LABORISSUE_ID=2) OR (LABORISSUE_ID=3)';
 
+  {$REGION 'table baseprice'}
+     SQLTextTblBasepriceSelect =
+      'SELECT ' +
+        'BASEPRICE_ID, ' +
+        'BASEPRICE_PROC_CODE, ' +
+        'BASEPRICE_PROC_NAME, ' +
+        'BASEPRICE_PROC_ISSUE_FK ' +
+      'FROM TBL_BASEPRICE ' +
+      'ORDER BY 1';
+
+     SQLTextTblBasepriceInsert =
+      'INSERT INTO TBL_BASEPRICE (' +
+        'BASEPRICE_ID, ' +
+        'BASEPRICE_PROC_CODE, ' +
+        'BASEPRICE_PROC_NAME, ' +
+        'BASEPRICE_PROC_ISSUE_FK) ' +
+      'VALUES (' +
+        ':BASEPRICE_ID, ' +
+        ':BASEPRICE_PROC_CODE, ' +
+        ':BASEPRICE_PROC_NAME, ' +
+        ':BASEPRICE_PROC_ISSUE_FK) ' +
+      'RETURNING BASEPRICE_ID';
+
+    SQLTextTblBasepriceUpdate =
+      'UPDATE TBL_BASEPRICE ' +
+      'SET ' +
+        'BASEPRICE_PROC_CODE = :BASEPRICE_PROC_CODE, ' +
+        'BASEPRICE_PROC_NAME = :BASEPRICE_PROC_NAME, ' +
+        'BASEPRICE_PROC_ISSUE_FK = :BASEPRICE_PROC_ISSUE_FK ' +
+      'WHERE (BASEPRICE_ID = :BASEPRICE_ID)';
+
+    SQLTextTblBasepriceDelete =
+      'DELETE FROM TBL_BASEPRICE ' +
+      'WHERE (BASEPRICE_ID = :BASEPRICE_ID)';
+  {$ENDREGION}
+  {$REGION 'table price'}
+    SQLTextTblPriceSelect =
+      'SELECT ' +
+        'MAX(ID_PRICE) AS ID_PRICE, ' +
+        'NAME_PRICE ' +
+      'FROM TBL_PRICE ' +
+      'GROUP BY NAME_PRICE ' +
+      'ORDER BY 1 DESC';
+
+    SQLTextTblPriceInsert =
+      'INSERT INTO TBL_PRICE (' +
+        'FK_BASEPRICE,' +
+        'NAME_PRICE,' +
+        'COST_PROC_PRICE) ' +
+      'VALUES (' +
+        ':FK_BASEPRICE,' +
+        ':NAME_PRICE,' +
+        ':COST_PROC_PRICE)';
+
+    SQLTextTblPriceUpdate =
+      'UPDATE TBL_PRICE ' +
+      'SET FK_BASEPRICE = :FK_BASEPRICE,' +
+          'COST_PROC_PRICE = :COST_PROC_PRICE,' +
+          'CHOICE_PROC_PRICE = :CHOICE_PROC_PRICE ' +
+      'WHERE (NAME_PRICE = :NAME_PRICE)';
+
+    SQLTextTblPriceDelete =
+      'DELETE FROM TBL_PRICE ' +
+      'WHERE (NAME_PRICE = :NAME_PRICE)';
+  {$ENDREGION}
+  {$REGION 'table laborissue'}
+    SQLTextTblLaborIssueSelect =
+      'SELECT ' +
+          'LABORISSUE_ID, ' +
+          'LABORISSUE_NAME, ' +
+          'LABORISSUE_CODELITER ' +
+      'FROM TBL_LABORISSUE ' +
+      'ORDER BY 1';
+
+    SQLTextTblLaborIssueInsert =
+      'INSERT INTO TBL_LABORISSUE (' +
+        'LABORISSUE_NAME, ' +
+        'LABORISSUE_CODELITER) ' +
+      'VALUES (' +
+        ':LABORISSUE_NAME, ' +
+        ':LABORISSUE_CODELITER) ' +
+      'RETURNING LABORISSUE_ID';
+  {$ENDREGION}
+
   SQLTextTblItemsSelect =
     'SELECT ' +
         'LI.LABORISSUE_ID, ' +
@@ -227,52 +313,6 @@ const
        'INNER JOIN TBL_LABORISSUE LI ' +
        'ON (BP.BASEPRICE_PROC_ISSUE_FK = LI.LABORISSUE_ID) ' +
     'WHERE LI.LABORISSUE_NAME = :LABORISSUE_NAME';
-
-  SQLTextTblPriceSelect =
-    'SELECT ' +
-      'MAX(ID_PRICE) AS ID_PRICE, ' +
-      'NAME_PRICE ' +
-    'FROM TBL_PRICE ' +
-    'GROUP BY NAME_PRICE ' +
-    'ORDER BY 1 DESC';
-
-  SQLTextTblPriceInsert =
-    'INSERT INTO TBL_PRICE (' +
-      'FK_BASEPRICE,' +
-      'NAME_PRICE,' +
-      'COST_PROC_PRICE) ' +
-    'VALUES (' +
-      ':FK_BASEPRICE,' +
-      ':NAME_PRICE,' +
-      ':COST_PROC_PRICE)';
-
-  SQLTextTblPriceUpdate =
-    'UPDATE TBL_PRICE ' +
-    'SET FK_BASEPRICE = :FK_BASEPRICE,' +
-        'COST_PROC_PRICE = :COST_PROC_PRICE,' +
-        'CHOICE_PROC_PRICE = :CHOICE_PROC_PRICE ' +
-    'WHERE (NAME_PRICE = :NAME_PRICE)';
-
-  SQLTextTblPriceDelete =
-    'DELETE FROM TBL_PRICE ' +
-    'WHERE (NAME_PRICE = :NAME_PRICE)';
-
-  SQLTextTblLaborIssueSelect =
-    'SELECT ' +
-        'LABORISSUE_ID, ' +
-        'LABORISSUE_NAME, ' +
-        'LABORISSUE_CODELITER ' +
-    'FROM TBL_LABORISSUE ' +
-    'ORDER BY 1';
-
-  SQLTextTblLaborIssueInsert =
-    'INSERT INTO TBL_LABORISSUE (' +
-      'LABORISSUE_NAME, ' +
-      'LABORISSUE_CODELITER) ' +
-    'VALUES (' +
-      ':LABORISSUE_NAME, ' +
-      ':LABORISSUE_CODELITER) ' +
-    'RETURNING LABORISSUE_ID';
 
   SQLTextResultSelect =
       'SELECT ' +
@@ -286,11 +326,9 @@ const
       'FROM TBL_LABORISSUE LI ' +
          'JOIN TBL_BASEPRICE BP ON (LI.LABORISSUE_ID = BP.BASEPRICE_PROC_ISSUE_FK) ' +
          'JOIN TBL_PRICE P ON (BP.BASEPRICE_ID = P.FK_BASEPRICE) ' +
-//      'WHERE (P.COST_PROC_PRICE > 0)  ' +
-//              'AND (NAME_PRICE CONTAINING :NAME_PRICE) ' +
       'ORDER BY 1';
 
-{$REGION 'report SQLText'}
+  {$REGION 'report SQLText'}
     SQLTextClinicList =
           'SELECT ' +
             'ID_CLINIC, CLIN_NAME, CLIN_ADRESS, CLIN_ADRESSBOOL, ' +
@@ -363,7 +401,7 @@ const
     'FROM TBL_ANKETA ' +
     'WHERE ID_ANKETA < 500 ' +
     'ORDER BY 1';
-{$ENDREGION}
+  {$ENDREGION}
 
 var
   Form1: TForm1;
@@ -753,8 +791,6 @@ var
   end;
 
   procedure FillItems;
-//  var
-//    NodeLvl: Integer;
   begin
     if not Assigned(NodeSender) then Exit;
     NodeLvl:= vst.GetNodeLevel(NodeSender);
@@ -944,18 +980,18 @@ begin
     Exit;
   end;
 
-//  bb:= False;
-//  bb:= mds_labor.Locate('LABORISSUE_NAME',Trim(edtPriceName.Text),[loCaseInsensitive]);
-//  ss:= UpperCase(mds_labor.FieldByName('LABORISSUE_NAME').AsString,loUserLocale);//worked
-//  ss:= UpperCase(mds_labor.FieldByName('LABORISSUE_NAME').AsString,loInvariantLocale);//not worked
-//  ss:= UpperCase(Trim(edtPriceName.Text), loUserLocale);//worked
-//  aa:= CompareText(mds_labor.FieldByName('LABORISSUE_NAME').AsString,Trim(edtPriceName.Text));// <> 0 --> not worked
-//  aa:= CompareText(mds_labor.FieldByName('LABORISSUE_NAME').AsString,Trim(edtPriceName.Text), loUserLocale); = 0 --> worked
+{$REGION 'debuging'}
+  //  bb:= mds_labor.Locate('LABORISSUE_NAME',Trim(edtPriceName.Text),[loCaseInsensitive]);
+  //  ss:= UpperCase(mds_labor.FieldByName('LABORISSUE_NAME').AsString,loUserLocale);//worked
+  //  ss:= UpperCase(mds_labor.FieldByName('LABORISSUE_NAME').AsString,loInvariantLocale);//not worked
+  //  ss:= UpperCase(Trim(edtPriceName.Text), loUserLocale);//worked
+  //  aa:= CompareText(mds_labor.FieldByName('LABORISSUE_NAME').AsString,Trim(edtPriceName.Text));// <> 0 --> not worked
+  //  aa:= CompareText(mds_labor.FieldByName('LABORISSUE_NAME').AsString,Trim(edtPriceName.Text), loUserLocale); = 0 --> worked
+{$ENDREGION}
 
   if not IsPickedNode then
   begin
-    if mds_labor.Locate('LABORISSUE_NAME',Trim(edtPriceName.Text),[loCaseInsensitive]) then
-//      if (CompareText(mds_labor.FieldByName('LABORISSUE_NAME').AsString,Trim(edtPriceName.Text), loUserLocale) = 0) then
+    if mds_laborissue.Locate('LABORISSUE_NAME',Trim(edtPriceName.Text),[loCaseInsensitive]) then
     begin
       Application.MessageBox('В базе данных уже есть раздел с таким названием! Воспользуйтесь кнопкой выбора справа от панели',
                             'Некорректные данные',MB_ICONINFORMATION);
@@ -963,8 +999,7 @@ begin
       Exit
     end;
 
-    if mds_labor.Locate('LABORISSUE_CODELITER',Trim(edtCodeLiter.Text),[loCaseInsensitive]) then
-//      if (CompareText(mds_labor.FieldByName('LABORISSUE_CODELITER').AsString,Trim(edtCodeLiter.Text), loUserLocale) = 0) then
+    if mds_laborissue.Locate('LABORISSUE_CODELITER',Trim(edtCodeLiter.Text),[loCaseInsensitive]) then
     begin
       Application.MessageBox('Литера кода раздела должна быть уникальной!','Некорректные данные',MB_ICONINFORMATION);
       if edtCodeLiter.CanFocus then edtCodeLiter.SetFocus;
@@ -1035,36 +1070,39 @@ begin
           tctInserted, tctUpdated:
             begin
               Data.CurrentChangeType:= tctUpdated;
+              Data.LastChangeType:= tctUpdated;
               Data.PriceName:= Trim(edtPriceName.Text);
             end;
         end;
     end;
 
-//    case EditMode of
-//      emAdd:
-//        begin
-//          if (Data.LastChangeType = tctPresent)
-//            then Data.CurrentChangeType:= tctInserted
-//            else Data.CurrentChangeType:= tctUpdated;
-//          Data.LastChangeType:= Data.LastChangeType;
-//        end;
-//      emEdit:
-//        case ActionNodeSender of
-//          ansNodeEdit:
-//              begin
-//                if (Data.LastChangeType = tctInserted) then
-//                begin
-//                  Data.CurrentChangeType:= tctUpdated;
-//                  Data.LastChangeType:= Data.CurrentChangeType;
-//                end;
-//              end;
-//            else
-//              begin
-//                Data.CurrentChangeType:= tctInserted;
-//                Data.LastChangeType:= tctInserted;
-//              end;
-//        end;
-//    end;
+{$REGION 'skiped'}
+  //    case EditMode of
+  //      emAdd:
+  //        begin
+  //          if (Data.LastChangeType = tctPresent)
+  //            then Data.CurrentChangeType:= tctInserted
+  //            else Data.CurrentChangeType:= tctUpdated;
+  //          Data.LastChangeType:= Data.LastChangeType;
+  //        end;
+  //      emEdit:
+  //        case ActionNodeSender of
+  //          ansNodeEdit:
+  //              begin
+  //                if (Data.LastChangeType = tctInserted) then
+  //                begin
+  //                  Data.CurrentChangeType:= tctUpdated;
+  //                  Data.LastChangeType:= Data.CurrentChangeType;
+  //                end;
+  //              end;
+  //            else
+  //              begin
+  //                Data.CurrentChangeType:= tctInserted;
+  //                Data.LastChangeType:= tctInserted;
+  //              end;
+  //        end;
+  //    end;
+{$ENDREGION}
 
     case NodeLvl of
       0:
@@ -1164,24 +1202,24 @@ begin
 
   FActionNodeSender:= ansNodeEdit;
 
-//  NodeLvl:= vst.GetNodeLevel(NodeSender);
-//  pnlEdtCost.Visible:= (NodeLvl = 1);
-//  pnlEdtCodeLiter.Visible:= (NodeLvl <> 1);
-
   Data:= vst.GetNodeData(NodeSender);
   if not Assigned(Data) then Exit;
 
-  actEdtNodeDataOnExecute(Sender);
+
   edtPriceName.Text:= Data^.PriceName;
+  NodeLvl:= vst.GetNodeLevel(NodeSender);
 
   case NodeLvl of
-    0: if (Data.CurrentChangeType <> tctExisting) then edtCodeLiter.Text:= UpperCase(Data.CodeLiter, loUserLocale);
+    0: if (Data.CurrentChangeType <> tctExisting)
+        then edtCodeLiter.Text:= UpperCase(Data.CodeLiter, loUserLocale);
     1:
       begin
         fs:= TFormatSettings.Create;
         edtPriceCost.Text:= Format('%2.2f',[Data^.CurrentCost]);
       end;
   end;
+
+  actEdtNodeDataOnExecute(Sender);
 end;
 
 procedure TForm1.actNodeExpandExecute(Sender: TObject);
@@ -1322,10 +1360,7 @@ end;
 
 procedure TForm1.actPriceDelExecute(Sender: TObject);
 begin
-  if mds_labor.IsEmpty then Exit;
-
-
-
+  if mds_laborissue.IsEmpty then Exit;
 end;
 
 procedure TForm1.actPriceEdtExecute(Sender: TObject);
@@ -1344,16 +1379,16 @@ var
 begin
   NodeID:= -1;
   RootID:= -1;
-  if not mds_price.Active then Exit;
+  if not mds_common.Active then Exit;
 
   try
     vst.BeginUpdate;
     vst.Clear;
 
-    mds_price.DisableControls;
-    if mds_labor.Active
-      then mds_labor.EmptyTable
-      else mds_labor.Active:= True;
+    mds_common.DisableControls;
+    if mds_laborissue.Active
+      then mds_laborissue.EmptyTable
+      else mds_laborissue.Active:= True;
 
     try
       tmpTrans.StartTransaction;
@@ -1366,7 +1401,7 @@ begin
 
         while not Eof do
         begin
-          mds_labor.AppendRecord([
+          mds_laborissue.AppendRecord([
                     FieldByName('LABORISSUE_ID').AsInteger,
                     FieldByName('LABORISSUE_NAME').AsString,
                     FieldByName('LABORISSUE_CODELITER').AsString
@@ -1383,18 +1418,18 @@ begin
       end;
     end;
 
-    mds_labor.First;
+    mds_laborissue.First;
 
-    while not mds_labor.Eof do
+    while not mds_laborissue.Eof do
     begin
-      mds_price.Filtered:= False;
-      mds_price.Filter:= Format('(UPPER(NAME_PRICE) LIKE UPPER(''%%%s%%'')) AND (LABORISSUE_ID=%d)',
-                                [PriceName, mds_labor.FieldByName('LABORISSUE_ID').AsInteger]);
-      mds_price.Filtered:= True;
+      mds_common.Filtered:= False;
+      mds_common.Filter:= Format('(UPPER(NAME_PRICE) LIKE UPPER(''%%%s%%'')) AND (LABORISSUE_ID=%d)',
+                                [PriceName, mds_laborissue.FieldByName('LABORISSUE_ID').AsInteger]);
+      mds_common.Filtered:= True;
 
-      if not mds_price.IsEmpty then
+      if not mds_common.IsEmpty then
       begin
-        mds_price.First;
+        mds_common.First;
 
         Node:= vst.AddChild(nil);
         Data:= vst.GetNodeData(Node);
@@ -1408,7 +1443,7 @@ begin
             end;
           emEdit:
             begin
-              NodeID:= mds_price.FieldByName('BASEPRICE_ID').AsInteger;
+              NodeID:= mds_common.FieldByName('BASEPRICE_ID').AsInteger;
             end;
         end;
 
@@ -1418,21 +1453,21 @@ begin
           Data^.DepartID:= RootID;
           Data^.CurrentChangeType:= TreeChangeType;
           Data^.LastChangeType:= TreeChangeType;
-          Data^.PriceName:= mds_price.FieldByName('LABORISSUE_NAME').AsString;
+          Data^.PriceName:= mds_common.FieldByName('LABORISSUE_NAME').AsString;
           Data^.CurrentCost:= 0;
           Data^.InitCost:= 0;
-          Data^.CodeLiter:= mds_price.FieldByName('LABORISSUE_CODELITER').AsString;
+          Data^.CodeLiter:= mds_common.FieldByName('LABORISSUE_CODELITER').AsString;
 
           RootID:= NodeID;
 
-          while not mds_price.Eof do
+          while not mds_common.Eof do
           begin
             ChdNode:= vst.AddChild(Node);
             Data:= vst.GetNodeData(ChdNode);
 
             case EditMode of
               emAdd: NodeID:= vst.AbsoluteIndex(ChdNode);
-              emEdit: NodeID:= mds_price.FieldByName('BASEPRICE_ID').AsInteger;
+              emEdit: NodeID:= mds_common.FieldByName('BASEPRICE_ID').AsInteger;
             end;
 
             if Assigned(Data) then
@@ -1441,27 +1476,27 @@ begin
               Data^.DepartID:= RootID;
               Data^.CurrentChangeType:= TreeChangeType;
               Data^.LastChangeType:= TreeChangeType;
-              Data^.PriceName:= mds_price.FieldByName('BASEPRICE_PROC_NAME').AsString;
-              Data^.CurrentCost:= mds_price.FieldByName('COST_PROC_PRICE').AsCurrency;
-              Data^.InitCost:= mds_price.FieldByName('COST_PROC_PRICE').AsCurrency;
+              Data^.PriceName:= mds_common.FieldByName('BASEPRICE_PROC_NAME').AsString;
+              Data^.CurrentCost:= mds_common.FieldByName('COST_PROC_PRICE').AsCurrency;
+              Data^.InitCost:= mds_common.FieldByName('COST_PROC_PRICE').AsCurrency;
               Data^.CodeLiter:= '';
             end;
 
-            mds_price.Next;
+            mds_common.Next;
           end;
 
         end;{Assigned(Data) of Node}
-      end; {not mds_price.IsEmpty}
+      end; {not mds_common.IsEmpty}
 
-      mds_labor.Next;
+      mds_laborissue.Next;
     end;
   finally
 
-    mds_price.Filtered:= False;
-    mds_price.Filter:= Format('UPPER(NAME_PRICE) LIKE UPPER(''%%%s%%'')',[PriceName]);
-    mds_price.Filtered:= True;
+    mds_common.Filtered:= False;
+    mds_common.Filter:= Format('UPPER(NAME_PRICE) LIKE UPPER(''%%%s%%'')',[PriceName]);
+    mds_common.Filtered:= True;
 
-    mds_price.EnableControls;
+    mds_common.EnableControls;
     vst.EndUpdate;
   end;
 end;
@@ -1473,11 +1508,105 @@ var
 begin
   if (vst.RootNodeCount = 0) then Exit;
 
-  rNode:= nil;
-  chNode:= nil;
-
   try
-    tmpTrans.StartTransaction;
+    rNode:= nil;
+    chNode:= nil;
+
+    if (EditMode = emAdd) then
+    begin
+      if (Trim(edtSetPriceName.Text) = '') then
+      begin
+        Application.MessageBox('Задайте имя прайс-листа!','Некорректные данные',MB_ICONINFORMATION);
+        if edtSetPriceName.CanFocus then edtSetPriceName.SetFocus;
+        Exit;
+      end;
+
+      try
+        tmpTrans.StartTransaction;
+
+        tmpQry.Close;
+        tmpQry.SQL.Text:= SQLTextTblPriceSelect;
+        tmpQry.ExecQuery;
+
+        if mds_price.Active
+          then mds_price.EmptyTable
+          else mds_price.Active:= True;
+
+        while not tmpQry.Eof do
+        begin
+          mds_price.AppendRecord([
+                    tmpQry.FieldByName('ID_PRICE').AsInteger,
+                    tmpQry.FieldByName('NAME_PRICE').AsString
+                                  ]);
+          tmpQry.Next;
+        end;
+
+        tmpTrans.Commit;
+      except
+        on E: EFIBError do
+        begin
+          tmpTrans.Rollback;
+          Application.MessageBox(PChar(E.Message), 'Ошибка доступа к данным', MB_ICONERROR);
+          Exit;
+        end;
+      end;
+
+      if mds_price.Locate('NAME_PRICE', Trim(edtSetPriceName.Text),[loCaseInsensitive]) then
+      begin
+        Application.MessageBox('Такое имя прайс-листа уже есть в базе данных. Задайте другое!','Некорректные данные',MB_ICONINFORMATION);
+        if edtSetPriceName.CanFocus then edtSetPriceName.SetFocus;
+        Exit;
+      end;
+    end;
+
+    try
+      tmpTrans.StartTransaction;
+      tmpQry.Close;
+      tmpQry.SQL.Text:= SQLTextTblLaborIssueSelect;
+      tmpQry.ExecQuery;
+
+      if mds_laborissue.Active
+        then mds_laborissue.EmptyTable
+        else mds_laborissue.Active:= True;
+
+      while not tmpQry.Eof do
+      begin
+        mds_laborissue.AppendRecord([
+          tmpQry.FieldByName('LABORISSUE_ID').AsInteger,
+          tmpQry.FieldByName('LABORISSUE_NAME').AsString,
+          tmpQry.FieldByName('LABORISSUE_CODELITER').AsString
+                                    ]);
+        tmpQry.Next;
+      end;
+
+      tmpQry.Close;
+      tmpQry.SQL.Text:= SQLTextTblBasepriceSelect;
+      tmpQry.ExecQuery;
+
+      if mds_baseprice.Active
+        then mds_baseprice.EmptyTable
+        else mds_baseprice.Active:= True;
+
+      while not tmpQry.Eof do
+      begin
+        mds_baseprice.AppendRecord([
+          tmpQry.FieldByName('BASEPRICE_ID').AsInteger,
+          tmpQry.FieldByName('BASEPRICE_PROC_CODE').AsString,
+          tmpQry.FieldByName('BASEPRICE_PROC_NAME').AsString,
+          tmpQry.FieldByName('BASEPRICE_PROC_ISSUE_FK').AsInteger
+                                    ]);
+        tmpQry.Next;
+      end;
+
+      tmpTrans.Commit;
+    except
+        on E: EFIBError do
+        begin
+          tmpTrans.Rollback;
+          Application.MessageBox(PChar(E.Message), 'Ошибка доступа к данным', MB_ICONERROR);
+          Exit;
+        end;
+    end;
 
     case EditMode of
       emAdd:
@@ -1492,7 +1621,6 @@ begin
               if (Data.CurrentChangeType <> tctDeleted) then
               begin
 
-
               end;
             end;
 
@@ -1504,15 +1632,8 @@ begin
 
         end;
     end;
-
-    tmpTrans.Commit;
     actTreeShowOffExecute(Sender);
-  except
-    on E: EFIBError do
-    begin
-      tmpTrans.Rollback;
-      Application.MessageBox(PChar(E.Message), 'Ошибка доступа к данным', MB_ICONERROR);
-    end;
+  finally
   end;
 end;
 
@@ -1520,15 +1641,15 @@ procedure TForm1.cbbPriceChange(Sender: TObject);
 begin
   FPriceName:= cbbPrice.Items[cbbPrice.ItemIndex];
 
-  if not mds_price.Active then Exit;
+  if not mds_common.Active then Exit;
 
-  mds_price.DisableControls;
+  mds_common.DisableControls;
   try
-    mds_price.Filtered:= False;
-    mds_price.Filter:= Format('UPPER(NAME_PRICE) LIKE UPPER(''%%%s%%'')',[PriceName]);
-    mds_price.Filtered:= True;
+    mds_common.Filtered:= False;
+    mds_common.Filter:= Format('UPPER(NAME_PRICE) LIKE UPPER(''%%%s%%'')',[PriceName]);
+    mds_common.Filtered:= True;
   finally
-    mds_price.EnableControls;
+    mds_common.EnableControls;
   end;
 end;
 
@@ -1819,7 +1940,29 @@ begin
   end;
 
 
+  with mds_baseprice do
+  begin
+    FieldDefs.Add('BASEPRICE_ID', ftInteger);
+    FieldDefs.Add('BASEPRICE_PROC_CODE', ftString, 20);
+    FieldDefs.Add('BASEPRICE_PROC_NAME', ftString, 100);
+    FieldDefs.Add('BASEPRICE_PROC_ISSUE_FK', ftInteger);
+
+    CreateDataSet;
+    Filtered:= False;
+    Active := False;
+  end;
+
   with mds_price do
+  begin
+    FieldDefs.Add('ID_PRICE', ftInteger);
+    FieldDefs.Add('NAME_PRICE', ftString, 40);
+
+    CreateDataSet;
+    Filtered:= False;
+    Active := False;
+  end;
+
+  with mds_common do
   begin
     FieldDefs.Add('BASEPRICE_ID', ftInteger);
     FieldDefs.Add('BASEPRICE_PROC_NAME', ftString, 100);
@@ -1849,7 +1992,7 @@ begin
     Active := False;
   end;
 
-  with mds_labor do
+  with mds_laborissue do
   begin
     FieldDefs.Add('LABORISSUE_ID', ftInteger);
     FieldDefs.Add('LABORISSUE_NAME', ftString, 100);
@@ -1865,9 +2008,9 @@ procedure TForm1.FormShow(Sender: TObject);
 begin
   tmpDB.Connected:= True;
 
-  if mds_price.Active
-    then mds_price.EmptyTable
-    else mds_price.Active:= True;
+  if mds_common.Active
+    then mds_common.EmptyTable
+    else mds_common.Active:= True;
 
   if mds_src.Active
     then mds_src.EmptyTable
@@ -1875,7 +2018,7 @@ begin
 
 
   try
-    mds_price.DisableControls;
+    mds_common.DisableControls;
     try
       tmpTrans.StartTransaction;
 
@@ -1887,7 +2030,7 @@ begin
 
         while not Eof do
         begin
-             mds_price.AppendRecord([
+             mds_common.AppendRecord([
                   FieldByName('BASEPRICE_ID').AsInteger,
                   FieldByName('BASEPRICE_PROC_NAME').AsString,
                   FieldByName('COST_PROC_PRICE').AsCurrency,
@@ -1911,7 +2054,7 @@ begin
       end;
       tmpTrans.Commit;
 
-      mds_price.First;
+      mds_common.First;
       FillCbbPrice(Sender);
       cbbPriceChange(Sender);
 
@@ -1924,7 +2067,7 @@ begin
       end;
     end;
   finally
-    mds_price.EnableControls;
+    mds_common.EnableControls;
   end;
 end;
 
@@ -1945,15 +2088,17 @@ begin
       tctUpdated: ss:= 'tctUpdated';
     end;
 
-    if Sender.Expanded[node]
-      then ss1:= 'Expanded[node] = True'
-      else ss1:= 'Expanded[node] = False';
+    case TreeChangeType of
+      tctExisting: ss1:= 'tctExisting';
+      tctDeleted: ss1:= 'tctDeleted';
+      tctInserted: ss1:= 'tctInserted';
+      tctUpdated: ss1:= 'tctUpdated';
+    end;
 
 
-    Self.Caption:= Format('PriceID: %d | DepartID: %d | index: %d | PriceName: %s | ChangeType: %s | %s',[
+    Self.Caption:= Format('PriceID: %d | DepartID: %d |  PriceName: %s | CurrentChangeType: %s | LastChangeType: %s',[
       Data^.PriceID,
       Data^.DepartID,
-      Node^.Index,
       Data^.PriceName,
       ss,
       ss1
