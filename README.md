@@ -2,6 +2,9 @@
 
 VTV Manipulation Project
 
+#### 1.0.18
+- all virtual tree events are set in the code at runtime
+
 #### 1.0.17
 - allow dragging only those nodes that are not in the database
 - implemented verification of added records for uniqueness in the tree and database
