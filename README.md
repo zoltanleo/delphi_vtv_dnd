@@ -2,6 +2,10 @@
 
 VTV Manipulation Project
 
+#### 1.0.17
+- allow dragging only those nodes that are not in the database
+- implemented verification of added records for uniqueness in the tree and database
+
 #### 1.0.16
 - fix some bugs
 

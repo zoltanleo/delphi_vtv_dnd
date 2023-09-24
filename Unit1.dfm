@@ -186,14 +186,14 @@ object Form1: TForm1
       object pnlPriceNameEdt: TPanel
         Left = 1
         Top = 1
-        Width = 238
+        Width = 228
         Height = 54
         Align = alClient
         Caption = 'pnlPriceNameEdt'
         TabOrder = 2
-        ExplicitWidth = 234
+        ExplicitWidth = 224
         DesignSize = (
-          238
+          228
           54)
         object Label1: TLabel
           Left = 3
@@ -206,23 +206,23 @@ object Form1: TForm1
         object edtPriceName: TEdit
           Left = 7
           Top = 23
-          Width = 225
+          Width = 215
           Height = 23
           Anchors = [akLeft, akTop, akRight]
           TabOrder = 0
           Text = 'edtPriceName'
-          ExplicitWidth = 221
+          ExplicitWidth = 211
         end
       end
       object pnlEdtCodeLiter: TPanel
-        Left = 239
+        Left = 229
         Top = 1
-        Width = 72
+        Width = 82
         Height = 54
         Align = alRight
         Caption = 'pnlEdtCodeLiter'
         TabOrder = 3
-        ExplicitLeft = 235
+        ExplicitLeft = 225
         object Label2: TLabel
           Left = 6
           Top = 2
@@ -466,7 +466,7 @@ object Form1: TForm1
   object tmpTrans: TpFIBTransaction
     DefaultDatabase = tmpDB
     TRParams.Strings = (
-      'read'
+      'write'
       'nowait'
       'rec_version'
       'read_committed')
@@ -618,8 +618,8 @@ object Form1: TForm1
   end
   object mds_laborissue: TMemTableEh
     Params = <>
-    Left = 144
-    Top = 368
+    Left = 360
+    Top = 360
   end
   object mds_src: TMemTableEh
     Params = <>
@@ -668,12 +668,24 @@ object Form1: TForm1
   end
   object mds_baseprice: TMemTableEh
     Params = <>
-    Left = 144
-    Top = 304
+    Left = 360
+    Top = 296
   end
   object mds_price: TMemTableEh
     Params = <>
-    Left = 144
-    Top = 248
+    Left = 360
+    Top = 232
+  end
+  object qryLaborissue: TpFIBQuery
+    Transaction = tmpTrans
+    Database = tmpDB
+    Left = 498
+    Top = 363
+  end
+  object qryBaseprice: TpFIBQuery
+    Transaction = tmpTrans
+    Database = tmpDB
+    Left = 498
+    Top = 299
   end
 end

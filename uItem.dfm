@@ -2,8 +2,8 @@ object frmItem: TfrmItem
   Left = 0
   Top = 0
   Caption = 'frmItem'
-  ClientHeight = 425
-  ClientWidth = 444
+  ClientHeight = 420
+  ClientWidth = 424
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -16,21 +16,19 @@ object frmItem: TfrmItem
   object pnlTree: TPanel
     Left = 0
     Top = 0
-    Width = 444
-    Height = 386
+    Width = 424
+    Height = 381
     Align = alClient
     Caption = 'pnlTree'
     TabOrder = 0
-    ExplicitWidth = 440
-    ExplicitHeight = 385
     DesignSize = (
-      444
-      386)
+      424
+      381)
     object PriceTree: TVirtualStringTree
       Left = 8
       Top = 8
-      Width = 429
-      Height = 372
+      Width = 409
+      Height = 367
       Anchors = [akLeft, akTop, akRight, akBottom]
       Header.AutoSizeIndex = 0
       Header.MainColumn = -1
@@ -41,21 +39,21 @@ object frmItem: TfrmItem
       OnGetNodeDataSize = PriceTreeGetNodeDataSize
       Touch.InteractiveGestures = [igPan, igPressAndTap]
       Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
+      ExplicitWidth = 417
+      ExplicitHeight = 369
       Columns = <>
     end
   end
   object pnlBtns: TPanel
     Left = 0
-    Top = 386
-    Width = 444
+    Top = 381
+    Width = 424
     Height = 39
     Align = alBottom
     Caption = 'pnlBtns'
     TabOrder = 1
-    ExplicitTop = 385
-    ExplicitWidth = 440
     DesignSize = (
-      444
+      424
       39)
     object lblEmptyWarninig: TLabel
       Left = 64
@@ -65,24 +63,24 @@ object frmItem: TfrmItem
       Caption = 'lblEmptyWarninig'
     end
     object btnSave: TButton
-      Left = 281
+      Left = 261
       Top = 7
       Width = 75
       Height = 25
       Action = actChoice
       Anchors = [akRight, akBottom]
       TabOrder = 0
-      ExplicitLeft = 277
+      ExplicitLeft = 269
     end
     object btnCancel: TButton
-      Left = 362
+      Left = 342
       Top = 7
       Width = 75
       Height = 25
       Action = actCancel
       Anchors = [akRight, akBottom]
       TabOrder = 1
-      ExplicitLeft = 358
+      ExplicitLeft = 350
     end
   end
   object mds_items: TMemTableEh

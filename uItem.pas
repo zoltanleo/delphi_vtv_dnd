@@ -81,11 +81,10 @@ begin
 
   with mds_items do
   begin
-    FieldDefs.Add('LABORISSUE_ID', ftInteger);
-    FieldDefs.Add('LABORISSUE_NAME', ftString, 100);
-    FieldDefs.Add('LABORISSUE_CODELITER', ftString, 5);
     FieldDefs.Add('BASEPRICE_ID', ftInteger);
+    FieldDefs.Add('BASEPRICE_PROC_CODE', ftString, 20);
     FieldDefs.Add('BASEPRICE_PROC_NAME', ftString, 100);
+    FieldDefs.Add('BASEPRICE_PROC_ISSUE_FK', ftInteger);
 
     CreateDataSet;
     Filtered:= False;
