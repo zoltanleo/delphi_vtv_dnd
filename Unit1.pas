@@ -23,7 +23,7 @@ type
     DepartID: Integer;
     CurrentChangeType: TTreeChangeType;
     LastChangeType: TTreeChangeType;
-    PriceName: string;
+    ItemName: string;
     CurrentCost: Currency;
     InitCost: Currency;
     CodeLiter: string;
@@ -119,6 +119,9 @@ type
     mds_price: TMemTableEh;
     qryLaborissue: TpFIBQuery;
     qryBaseprice: TpFIBQuery;
+    qryPriceItemInsert: TpFIBQuery;
+    qryPriceItemUpdate: TpFIBQuery;
+    qryPriceItemDelete: TpFIBQuery;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure cbbPriceChange(Sender: TObject);
@@ -189,7 +192,7 @@ type
     FEditMode: TEditMode;
     FActionNodeSender: TActionNodeSender;
     FNodeSender: PVirtualNode;
-    FPickedNodeValue: string;
+    FInitPriceItemValue: string;
     FIsPickedNode: Boolean;
     procedure FillCbbPrice(Sender: TObject);
   public
@@ -202,7 +205,7 @@ type
     property NodeSender: PVirtualNode read FNodeSender;
     property ActionNodeSender: TActionNodeSender read FActionNodeSender;
     property EditMode: TEditMode read FEditMode write FEditMode;
-    property PickedNodeValue: string read FPickedNodeValue;
+    property InitPriceItemValue: string read FInitPriceItemValue;
     property IsPickedNode: Boolean read FIsPickedNode;
   end;
 
@@ -213,8 +216,8 @@ const
   pwd = 'password=cooladmin';
   chrset = 'lc_ctype=WIN1251';
   repPath = 'c:\proj\test_delphi\db_test\reports\';
-  cPriceName = 'Прайс Биомед 01.03.2022';
-  RepDSFilter = '(LABORISSUE_ID=2) OR (LABORISSUE_ID=3)';
+//  cPriceName = 'Прайс Биомед 01.03.2022';
+//  RepDSFilter = '(LABORISSUE_ID=2) OR (LABORISSUE_ID=3)';
 
   {$REGION 'table baseprice'}
      SQLTextTblBasepriceSelect =
@@ -260,7 +263,7 @@ const
       'GROUP BY NAME_PRICE ' +
       'ORDER BY 1 DESC';
 
-    SQLTextTblPriceInsert =
+    SQLTextTblPriceItemInsert =
       'INSERT INTO TBL_PRICE (' +
         'FK_BASEPRICE,' +
         'NAME_PRICE,' +
@@ -270,12 +273,14 @@ const
         ':NAME_PRICE,' +
         ':COST_PROC_PRICE)';
 
-    SQLTextTblPriceUpdate =
+    SQLTextTblPriceItemUpdate =
       'UPDATE TBL_PRICE ' +
-      'SET FK_BASEPRICE = :FK_BASEPRICE,' +
-          'COST_PROC_PRICE = :COST_PROC_PRICE,' +
-          'CHOICE_PROC_PRICE = :CHOICE_PROC_PRICE ' +
-      'WHERE (NAME_PRICE = :NAME_PRICE)';
+      'SET COST_PROC_PRICE = :COST_PROC_PRICE ' +
+      'WHERE (FK_BASEPRICE = :FK_BASEPRICE) AND (NAME_PRICE = :NAME_PRICE)';
+
+    SQLTextTblPriceItemDelete =
+      'DELETE FROM TBL_PRICE ' +
+      'WHERE (FK_BASEPRICE = :FK_BASEPRICE) AND (NAME_PRICE = :NAME_PRICE)';
 
     SQLTextTblPriceDelete =
       'DELETE FROM TBL_PRICE ' +
@@ -433,7 +438,7 @@ end;
 
 procedure TForm1.actTreeShowOffExecute(Sender: TObject);
 begin
-  EditMode:= emEdit;
+//  EditMode:= emEdit;
   pnlTbl.Visible:= True;
   pnlTree.Visible:= not pnlTbl.Visible;
 end;
@@ -442,7 +447,7 @@ procedure TForm1.actTreeShowOnExecute(Sender: TObject);
 var
   Node: PVirtualNode;
 begin
-  actPriceFillExecute(Sender);
+//  actPriceFillExecute(Sender);
 
   chbSetZeroCost.Enabled:= (EditMode = emAdd);
   chbShowUpdatedPrice.Enabled:= (EditMode = emEdit);
@@ -721,23 +726,6 @@ var
           then mds_issue.EmptyTable
           else mds_issue.Active:= True;
 
-//        tmpTrans.StartTransaction;
-//        tmpQry.Close;
-//        tmpQry.SQL.Text:= SQLTextTblLaborIssueSelect;
-//        tmpQry.ExecQuery;
-//
-//        while not tmpQry.Eof do
-//        begin
-//          mds_issue.AppendRecord([
-//              tmpQry.FieldByName('LABORISSUE_ID').AsInteger,
-//              tmpQry.FieldByName('LABORISSUE_NAME').AsString,
-//              tmpQry.FieldByName('LABORISSUE_CODELITER').AsString
-//                                 ]);
-//          tmpQry.Next;
-//        end;
-//
-//        tmpTrans.Commit;
-
         mds_laborissue.First;
 
         while not mds_laborissue.Eof do
@@ -759,7 +747,7 @@ var
             srcData:= vst.GetNodeData(srcNode);
 
             if Assigned(srcData) then
-              if mds_issue.Locate('LABORISSUE_NAME',srcData.PriceName,[loCaseInsensitive])
+              if mds_issue.Locate('LABORISSUE_NAME',srcData^.ItemName,[loCaseInsensitive])
                 then mds_issue.Delete;
 
             srcNode:= srcNode.NextSibling;
@@ -780,9 +768,9 @@ var
             destData:= PriceTree.GetNodeData(destNode);
             if Assigned(destData) then
             begin
-              destData.ItemID:= mds_issue.FieldByName('LABORISSUE_ID').AsInteger;
-              destData.ItemName:= mds_issue.FieldByName('LABORISSUE_NAME').AsString;
-              destData.ItemLiter:= mds_issue.FieldByName('LABORISSUE_CODELITER').AsString;
+              destData^.ItemID:= mds_issue.FieldByName('LABORISSUE_ID').AsInteger;
+              destData^.ItemName:= mds_issue.FieldByName('LABORISSUE_NAME').AsString;
+              destData^.ItemLiter:= mds_issue.FieldByName('LABORISSUE_CODELITER').AsString;
             end;
             mds_issue.Next;
           end;
@@ -820,27 +808,6 @@ var
 
         if Assigned(srcData) then
         begin
-//          tmpTrans.StartTransaction;
-//          tmpQry.Close;
-//          tmpQry.SQL.Text:= SQLTextTblItemsSelect;
-//          tmpQry.Prepare;
-//          tmpQry.ParamByName('LABORISSUE_NAME').Value:= srcdata.PriceName;
-//          tmpQry.ExecQuery;
-//
-//          while not tmpQry.Eof do
-//          begin
-//            mds_items.AppendRecord([
-//                tmpQry.FieldByName('LABORISSUE_ID').AsInteger,
-//                tmpQry.FieldByName('LABORISSUE_NAME').AsString,
-//                tmpQry.FieldByName('LABORISSUE_CODELITER').AsString,
-//                tmpQry.FieldByName('BASEPRICE_ID').AsInteger,
-//                tmpQry.FieldByName('BASEPRICE_PROC_NAME').AsString
-//                                    ]);
-//            tmpQry.Next;
-//          end;
-//
-//          tmpTrans.Commit;
-
           mds_baseprice.First;
 
           while not mds_baseprice.Eof do
@@ -854,7 +821,7 @@ var
             mds_baseprice.Next;
           end;
 
-          if mds_laborissue.Locate('LABORISSUE_NAME',srcdata.PriceName,[loCaseInsensitive]) then
+          if mds_laborissue.Locate('LABORISSUE_NAME',srcData^.ItemName,[loCaseInsensitive]) then
           begin
             mds_items.Filtered:= False;
             mds_items.Filter:= Format('(BASEPRICE_PROC_ISSUE_FK=%d)',[mds_laborissue.FieldByName('LABORISSUE_ID').AsInteger]);
@@ -870,7 +837,7 @@ var
               begin
                 srcData:= vst.GetNodeData(srcNode);
                 if Assigned(srcData) then
-                  if mds_items.Locate('BASEPRICE_PROC_NAME',srcData.PriceName,[loCaseInsensitive])
+                  if mds_items.Locate('BASEPRICE_PROC_NAME',srcData^.ItemName,[loCaseInsensitive])
                     then mds_items.Delete;
 
                 srcNode:= srcNode.NextSibling;
@@ -932,7 +899,7 @@ begin
       end;
 
       lblEmptyWarninig.Visible:= (PriceTree.RootNodeCount = 0);
-      FPickedNodeValue:= '';
+      FInitPriceItemValue:= '';
       FIsPickedNode:= False;
 
       ShowModal;
@@ -945,19 +912,19 @@ begin
         destData:= PriceTree.GetNodeData(destNode);
         if Assigned(destData) then
         begin
-          edtPriceName.Text:= destData.ItemName;
+          edtPriceName.Text:= destData^.ItemName;
 
           case ActionNodeSender of
             ansNodeRoot:
               begin
-                 edtCodeLiter.Text:= UpperCase(destData.ItemLiter,loUserLocale);
+                 edtCodeLiter.Text:= UpperCase(destData^.ItemLiter,loUserLocale);
                  edtPriceCost.Clear;
                  udPriceCost.Position:= 0;
-                 FPickedNodeValue:= UpperCase(Format('%s~%s',[edtPriceName.Text, edtCodeLiter.Text]), loUserLocale);
+                 FInitPriceItemValue:= UpperCase(Format('%s~%s',[edtPriceName.Text, edtCodeLiter.Text]), loUserLocale);
               end;
             ansNodeChild:
               begin
-                FPickedNodeValue:= edtPriceName.Text;
+                FInitPriceItemValue:= edtPriceName.Text;
                 edtCodeLiter.Clear;
                 fs:= TFormatSettings.Create;
                 edtPriceCost.Text:= Format('0%s00',[fs.DecimalSeparator]);
@@ -1008,9 +975,6 @@ var
   NodeLvl: Integer;
   Node: PVirtualNode;
   rData, Data: PMyRec;
-//  bb: Boolean;
-//  ss: string;
-//  aa: Integer;
   tmpCurr: Currency;
   fs: TFormatSettings;
 
@@ -1032,7 +996,7 @@ var
       aData:= vst.GetNodeData(aNode);
 
       if Assigned(aData) then
-        Result:= (CompareText(aData.PriceName, Trim(PriceNameText),loUserLocale) = 0);
+        Result:= (CompareText(aData^.ItemName, Trim(PriceNameText),loUserLocale) = 0);
 
       if Result then Exit;
 
@@ -1065,7 +1029,7 @@ var
         begin
           aData:= vst.GetNodeData(bNode);
           if Assigned(aData) then
-            Result:= (CompareStr(aData.PriceName, Trim(PriceNameText), loUserLocale) = 0);
+            Result:= (CompareStr(aData^.ItemName, Trim(PriceNameText), loUserLocale) = 0);
 
           if Result then Exit;
 
@@ -1095,12 +1059,17 @@ begin
   end;
 
   {$REGION 'debuging'}
-  //  bb:= mds_labor.Locate('LABORISSUE_NAME',Trim(edtPriceName.Text),[loCaseInsensitive]);
-  //  ss:= UpperCase(mds_labor.FieldByName('LABORISSUE_NAME').AsString,loUserLocale);//worked
-  //  ss:= UpperCase(mds_labor.FieldByName('LABORISSUE_NAME').AsString,loInvariantLocale);//not worked
-  //  ss:= UpperCase(Trim(edtPriceName.Text), loUserLocale);//worked
-  //  aa:= CompareText(mds_labor.FieldByName('LABORISSUE_NAME').AsString,Trim(edtPriceName.Text));// <> 0 --> not worked
-  //  aa:= CompareText(mds_labor.FieldByName('LABORISSUE_NAME').AsString,Trim(edtPriceName.Text), loUserLocale); = 0 --> worked
+//    var
+//    bb: Boolean;
+//    ss: string;
+//    aa: Integer;
+//
+//    bb:= mds_labor.Locate('LABORISSUE_NAME',Trim(edtPriceName.Text),[loCaseInsensitive]);
+//    ss:= UpperCase(mds_labor.FieldByName('LABORISSUE_NAME').AsString,loUserLocale);//worked
+//    ss:= UpperCase(mds_labor.FieldByName('LABORISSUE_NAME').AsString,loInvariantLocale);//not worked
+//    ss:= UpperCase(Trim(edtPriceName.Text), loUserLocale);//worked
+//    aa:= CompareText(mds_labor.FieldByName('LABORISSUE_NAME').AsString,Trim(edtPriceName.Text));// <> 0 --> not worked
+//    aa:= CompareText(mds_labor.FieldByName('LABORISSUE_NAME').AsString,Trim(edtPriceName.Text), loUserLocale); = 0 --> worked
 
 //  if not IsPickedNode then
 //  begin
@@ -1136,7 +1105,7 @@ begin
                     if IsPickedNode
                     then
                       begin
-                        if (PickedNodeValue <> UpperCase(Trim(edtPriceName.Text) + '~' + Trim(edtCodeLiter.Text),loUserLocale)) then
+                        if (InitPriceItemValue <> UpperCase(Trim(edtPriceName.Text) + '~' + Trim(edtCodeLiter.Text),loUserLocale)) then
                         begin
                           if mds_laborissue.Locate('LABORISSUE_NAME',Trim(edtPriceName.Text),[loCaseInsensitive]) then
                           begin
@@ -1198,7 +1167,7 @@ begin
                     if IsPickedNode
                     then
                       begin
-                        if (CompareText(PickedNodeValue,Trim(edtPriceName.Text), loUserLocale) <> 0) then
+                        if (CompareText(InitPriceItemValue,Trim(edtPriceName.Text), loUserLocale) <> 0) then
                           if mds_baseprice.Locate('BASEPRICE_PROC_NAME',Trim(edtPriceName.Text),[loCaseInsensitive]) then
                           begin
                             Application.MessageBox(PChar(ChildPriceItemBaseExixst),'Некорректные данные',MB_ICONINFORMATION);
@@ -1226,51 +1195,60 @@ begin
     ansNodeEdit:
               begin
                 NodeLvl:= vst.GetNodeLevel(NodeSender);
+                Data:= vst.GetNodeData(NodeSender);
 
                 case NodeLvl of
                   0:
-                    if RootTreeExists(edtPriceName.Text)
-                    then
-                      begin
-                        Application.MessageBox(PChar(RootPriceItemListExixst),'Некорректные данные',MB_ICONINFORMATION);
-                        if edtPriceName.CanFocus then edtPriceName.SetFocus;
-                        Exit;
-                      end
-                    else
-                      begin
-                        if mds_laborissue.Locate('LABORISSUE_NAME',Trim(edtPriceName.Text),[loCaseInsensitive]) then
-                        begin
-                          Application.MessageBox(PChar(RootPriceItemBaseExixst),
-                                                  'Некорректные данные',MB_ICONINFORMATION);
-                          if edtPriceName.CanFocus then edtPriceName.SetFocus;
-                          Exit;
-                        end;
+                    begin
+                      if (CompareText(InitPriceItemValue, Format('%s~%s',
+                                      [Trim(edtPriceName.Text),Trim(edtCodeLiter.Text)]),loUserLocale) <> 0) then
+                        if RootTreeExists(edtPriceName.Text)
+                        then
+                          begin
+                            Application.MessageBox(PChar(RootPriceItemListExixst),'Некорректные данные',MB_ICONINFORMATION);
+                            if edtPriceName.CanFocus then edtPriceName.SetFocus;
+                            Exit;
+                          end
+                        else
+                          begin
+                            if mds_laborissue.Locate('LABORISSUE_NAME',Trim(edtPriceName.Text),[loCaseInsensitive]) then
+                            begin
+                              Application.MessageBox(PChar(RootPriceItemBaseExixst),
+                                                      'Некорректные данные',MB_ICONINFORMATION);
+                              if edtPriceName.CanFocus then edtPriceName.SetFocus;
+                              Exit;
+                            end;
 
-                        if mds_laborissue.Locate('LABORISSUE_CODELITER',Trim(edtCodeLiter.Text),[loCaseInsensitive]) then
-                        begin
-                          Application.MessageBox('Раздел с таким значением литеры кода базе данных уже существует!',
-                                                  'Некорректные данные',MB_ICONINFORMATION);
-                          if edtCodeLiter.CanFocus then edtCodeLiter.SetFocus;
-                          Exit;
-                        end;
-                      end;
+                            if mds_laborissue.Locate('LABORISSUE_CODELITER',Trim(edtCodeLiter.Text),[loCaseInsensitive]) then
+                            begin
+                              Application.MessageBox('Раздел с таким значением литеры кода базе данных уже существует!',
+                                                      'Некорректные данные',MB_ICONINFORMATION);
+                              if edtCodeLiter.CanFocus then edtCodeLiter.SetFocus;
+                              Exit;
+                            end;
+                          end;
+                    end;
                   1:
-                    if ChildTreeExists(edtPriceName.Text)
-                    then
-                      begin
-                        Application.MessageBox(PChar(ChildPriceItemListExixst),'Некорректные данные',MB_ICONINFORMATION);
-                        if edtPriceName.CanFocus then edtPriceName.SetFocus;
-                        Exit;
-                      end
-                    else
-                      begin
-                        if mds_baseprice.Locate('BASEPRICE_PROC_NAME',Trim(edtPriceName.Text),[loCaseInsensitive]) then
-                        begin
-                          Application.MessageBox(PChar(ChildPriceItemBaseExixst),'Некорректные данные',MB_ICONINFORMATION);
-                          if edtPriceName.CanFocus then edtPriceName.SetFocus;
-                          Exit;
-                        end;
-                      end;
+                    begin
+                      if (CompareText(InitPriceItemValue, Trim(edtPriceName.Text),loUserLocale) <> 0) then
+                        if ChildTreeExists(edtPriceName.Text)
+                        then
+                          begin
+                            Application.MessageBox(PChar(ChildPriceItemListExixst),'Некорректные данные',MB_ICONINFORMATION);
+                            if edtPriceName.CanFocus then edtPriceName.SetFocus;
+                            Exit;
+                          end
+                        else
+                          begin
+                            if mds_baseprice.Locate('BASEPRICE_PROC_NAME',Trim(edtPriceName.Text),[loCaseInsensitive]) then
+                            begin
+                              Application.MessageBox(PChar(ChildPriceItemBaseExixst),'Некорректные данные',MB_ICONINFORMATION);
+                              if edtPriceName.CanFocus then edtPriceName.SetFocus;
+                              Exit;
+                            end;
+                          end;
+
+                    end;
                 end;
 
                 Node:= NodeSender;
@@ -1287,48 +1265,48 @@ begin
     case ActionNodeSender of
       ansNodeRoot:
         begin
-          Data.PriceID:= 0;
-          Data.DepartID:= 0;
-          Data.PriceName:= Trim(edtPriceName.Text);
-          Data.CurrentChangeType:= tctInserted;
-          Data.LastChangeType:= Data.CurrentChangeType;
+          Data^.PriceID:= 0;
+          Data^.DepartID:= 0;
+          Data^.ItemName:= Trim(edtPriceName.Text);
+          Data^.CurrentChangeType:= tctInserted;
+          Data^.LastChangeType:= Data^.CurrentChangeType;
 
           if mds_laborissue.Locate('LABORISSUE_NAME',Trim(edtPriceName.Text),[loCaseInsensitive])
-            then Data.ExistStatus:= tctExisting
-            else Data.ExistStatus:= tctNew;
+            then Data^.ExistStatus:= tctExisting
+            else Data^.ExistStatus:= tctNew;
         end;
       ansNodeChild:
         begin
-          Data.PriceID:= 0;
-          Data.DepartID:= 0;
-          Data.PriceName:= Trim(edtPriceName.Text);
-          Data.CurrentChangeType:= tctInserted;
-          Data.LastChangeType:= Data.CurrentChangeType;
+          Data^.PriceID:= 0;
+          Data^.DepartID:= 0;
+          Data^.ItemName:= Trim(edtPriceName.Text);
+          Data^.CurrentChangeType:= tctInserted;
+          Data^.LastChangeType:= Data^.CurrentChangeType;
 
           if mds_baseprice.Locate('BASEPRICE_PROC_NAME',Trim(edtPriceName.Text),[loCaseInsensitive])
-            then Data.ExistStatus:= tctExisting
-            else Data.ExistStatus:= tctNew;
+            then Data^.ExistStatus:= tctExisting
+            else Data^.ExistStatus:= tctNew;
         end;
       ansNodeEdit:
         begin
-          Data.CurrentChangeType:= tctUpdated;
-          Data.LastChangeType:= Data.CurrentChangeType;
-          Data.PriceName:= Trim(edtPriceName.Text);
+          Data^.CurrentChangeType:= tctUpdated;
+          Data^.LastChangeType:= Data^.CurrentChangeType;
+          Data^.ItemName:= Trim(edtPriceName.Text);
         end;
     end;
 
     case NodeLvl of
     0:
       begin
-        Data.CurrentCost:= 0;
-        Data.InitCost:= 0;
-        Data.CodeLiter:= UpperCase(Trim(edtCodeLiter.Text),loUserLocale);
+        Data^.CurrentCost:= 0;
+        Data^.InitCost:= 0;
+        Data^.CodeLiter:= UpperCase(Trim(edtCodeLiter.Text),loUserLocale);
       end;
     1:
       begin
         fs:= TFormatSettings.Create;
-        if TryStrToCurr(edtPriceCost.Text, tmpCurr,fs) then Data.CurrentCost:= tmpCurr;
-        Data.CodeLiter:= '';
+        if TryStrToCurr(edtPriceCost.Text, tmpCurr,fs) then Data^.CurrentCost:= tmpCurr;
+        Data^.CodeLiter:= '';
       end;
     end;
   end;
@@ -1419,16 +1397,22 @@ begin
   if not Assigned(Data) then Exit;
 
 
-  edtPriceName.Text:= Data^.PriceName;
+  edtPriceName.Text:= Data^.ItemName;
   NodeLvl:= vst.GetNodeLevel(NodeSender);
 
   case NodeLvl of
-    0: if (Data.CurrentChangeType <> tctExisting)
-        then edtCodeLiter.Text:= UpperCase(Data.CodeLiter, loUserLocale);
+    0:
+      begin
+        if (Data^.CurrentChangeType <> tctExisting)
+          then edtCodeLiter.Text:= UpperCase(Data^.CodeLiter, loUserLocale);
+
+        FInitPriceItemValue:= UpperCase(Format('%s~%s',[Data^.ItemName,Data^.CodeLiter]),loUserLocale);
+      end;
     1:
       begin
         fs:= TFormatSettings.Create;
         edtPriceCost.Text:= Format('%2.2f',[Data^.CurrentCost]);
+        FInitPriceItemValue:= UpperCase(Data^.ItemName, loUserLocale);
       end;
   end;
 
@@ -1563,6 +1547,8 @@ end;
 procedure TForm1.actPriceAddExecute(Sender: TObject);
 begin
   EditMode:= emAdd;
+  PriceName:= '';
+  actPriceFillExecute(Sender);
   actTreeShowOnExecute(Sender);
 end;
 
@@ -1579,6 +1565,8 @@ end;
 procedure TForm1.actPriceEdtExecute(Sender: TObject);
 begin
   EditMode:= emEdit;
+  PriceName:= cbbPrice.Items[cbbPrice.ItemIndex];
+  actPriceFillExecute(Sender);
   actTreeShowOnExecute(Sender);
 end;
 
@@ -1686,7 +1674,7 @@ begin
           Data^.CurrentChangeType:= TreeChangeType;
           Data^.LastChangeType:= TreeChangeType;
           Data^.ExistStatus:= TreeChangeType;
-          Data^.PriceName:= mds_common.FieldByName('LABORISSUE_NAME').AsString;
+          Data^.ItemName:= mds_common.FieldByName('LABORISSUE_NAME').AsString;
           Data^.CurrentCost:= 0;
           Data^.InitCost:= 0;
           Data^.CodeLiter:= mds_common.FieldByName('LABORISSUE_CODELITER').AsString;
@@ -1710,7 +1698,7 @@ begin
               Data^.CurrentChangeType:= TreeChangeType;
               Data^.LastChangeType:= TreeChangeType;
               Data^.ExistStatus:= TreeChangeType;
-              Data^.PriceName:= mds_common.FieldByName('BASEPRICE_PROC_NAME').AsString;
+              Data^.ItemName:= mds_common.FieldByName('BASEPRICE_PROC_NAME').AsString;
               Data^.CurrentCost:= mds_common.FieldByName('COST_PROC_PRICE').AsCurrency;
               Data^.InitCost:= mds_common.FieldByName('COST_PROC_PRICE').AsCurrency;
               Data^.CodeLiter:= '';
@@ -1761,6 +1749,7 @@ begin
       try
         tmpTrans.StartTransaction;
 
+        //==== getting a list of price names into mds_price ====//
         tmpQry.Close;
         tmpQry.SQL.Text:= SQLTextTblPriceSelect;
         tmpQry.ExecQuery;
@@ -1794,9 +1783,12 @@ begin
         if edtSetPriceName.CanFocus then edtSetPriceName.SetFocus;
         Exit;
       end;
+
+      PriceName:= Trim(edtSetPriceName.Text);
     end;
 
     try
+      //==== getting a list of laboratory sections into mds_laborissue ====//
       tmpTrans.StartTransaction;
       tmpQry.Close;
       tmpQry.SQL.Text:= SQLTextTblLaborIssueSelect;
@@ -1816,6 +1808,7 @@ begin
         tmpQry.Next;
       end;
 
+      //==== getting a list of the basic price items into mds_baseprice  ====//
       tmpQry.Close;
       tmpQry.SQL.Text:= SQLTextTblBasepriceSelect;
       tmpQry.ExecQuery;
@@ -1835,25 +1828,6 @@ begin
         tmpQry.Next;
       end;
 
-//      if mds_baseprice.Active
-//        then mds_baseprice.EmptyTable
-//        else mds_baseprice.Active:= True;
-
-//      tmpQry.Close;
-//      tmpQry.SQL.Text:= SQLTextTblBasepriceSelect;
-//      tmpQry.ExecQuery;
-//
-//      while not tmpQry.Eof do
-//      begin
-//        mds_baseprice.AppendRecord([
-//          tmpQry.FieldByName('BASEPRICE_ID').AsInteger,
-//          tmpQry.FieldByName('BASEPRICE_PROC_CODE').AsString,
-//          tmpQry.FieldByName('BASEPRICE_PROC_NAME').AsString,
-//          tmpQry.FieldByName('BASEPRICE_PROC_ISSUE_FK').AsInteger
-//                                    ]);
-//        tmpQry.Next;
-//      end;
-
       tmpTrans.Commit;
     except
         on E: EFIBError do
@@ -1871,67 +1845,6 @@ begin
       qryLaborissue.SQL.Text:= SQLTextTblLaborIssueInsert;
       qryLaborissue.Prepare;
 
-//      qryBaseprice.Close;
-//      qryBaseprice.SQL.Text:= SQLTextTblBasepriceInsert;
-//      qryBaseprice.Prepare;
-
-      rNode:= vst.GetFirst;
-      while Assigned(rNode) do
-      begin
-        Data:= vst.GetNodeData(rNode);
-        if Assigned(Data) then
-        begin
-          if (Data.CurrentChangeType <> tctDeleted) then
-          begin
-            if not mds_laborissue.Locate('LABORISSUE_NAME', Data.PriceName,[loCaseInsensitive]) then
-            begin
-              qryLaborissue.ParamByName('LABORISSUE_NAME').Value:= Data.PriceName;
-              qryLaborissue.ParamByName('LABORISSUE_CODELITER').Value:= Data.CodeLiter;
-              qryLaborissue.ExecQuery;
-              laborissue_id:= qryLaborissue.FieldByName('LABORISSUE_ID').AsInteger;
-
-              Data.PriceID:= laborissue_id;
-              Data.DepartID:= 0;
-            end;
-
-//            if (vsHasChildren in rNode.States) then
-//            begin
-//              chNode:= vst.GetFirstChild(rNode);
-//
-//              while Assigned(chNode) do
-//              begin
-//                Data:= vst.GetNodeData(chNode);
-//
-//                if Assigned(Data) then
-//                begin
-//                  if (Data.CurrentChangeType <> tctDeleted) then
-//                  begin
-//                    if not mds_baseprice.Locate('BASEPRICE_PROC_NAME',Data.PriceName,[loCaseInsensitive]) then
-//                    begin
-//                      qryBaseprice.ParamByName('BASEPRICE_PROC_CODE').Value:= null;
-//                      qryBaseprice.ParamByName('BASEPRICE_PROC_NAME').Value:= Data.PriceName;
-//                      qryBaseprice.ParamByName('BASEPRICE_PROC_ISSUE_FK').Value:= laborissue_id;
-//                      qryBaseprice.ExecQuery;
-//                      baseprice_id:= qryBaseprice.FieldByName('BASEPRICE_ID').AsInteger;
-//
-//                      Data.PriceID:= baseprice_id;
-//                      Data.DepartID:= laborissue_id;
-//                    end;
-//                  end;
-//                end;
-//
-//                chNode:= chNode.NextSibling;
-//              end;
-//            end;
-          end;
-        end;
-
-        rNode:= rNode.NextSibling;
-      end;
-
-      tmpTrans.Commit;
-
-      tmpTrans.StartTransaction;
       qryBaseprice.Close;
       qryBaseprice.SQL.Text:= SQLTextTblBasepriceInsert;
       qryBaseprice.Prepare;
@@ -1941,10 +1854,25 @@ begin
       while Assigned(rNode) do
       begin
         Data:= vst.GetNodeData(rNode);
-
-        if (Assigned(Data) and (vsHasChildren in rNode.States)) then
+        if Assigned(Data) then
         begin
-          laborissue_id:= Data.PriceID;
+          if mds_laborissue.Locate('LABORISSUE_NAME', Data^.ItemName,[loCaseInsensitive])
+          then
+            laborissue_id:= mds_laborissue.FieldByName('LABORISSUE_ID').AsInteger
+          else
+            begin
+              qryLaborissue.ParamByName('LABORISSUE_NAME').Value:= Data^.ItemName;
+              qryLaborissue.ParamByName('LABORISSUE_CODELITER').Value:= Data^.CodeLiter;
+              qryLaborissue.ExecQuery;
+              laborissue_id:= qryLaborissue.FieldByName('LABORISSUE_ID').AsInteger;
+            end;
+
+          Data^.PriceID:= laborissue_id;
+          Data^.DepartID:= 0;
+        end;
+
+        if (vsHasChildren in rNode.States) then
+        begin
           chNode:= rNode^.FirstChild;
 
           while Assigned(chNode) do
@@ -1953,21 +1881,18 @@ begin
 
             if Assigned(Data) then
             begin
-              if (Data.CurrentChangeType <> tctDeleted) then
-              begin
-                if not mds_baseprice.Locate('BASEPRICE_PROC_NAME',Data.PriceName,[loCaseInsensitive]) then
+              if mds_baseprice.Locate('BASEPRICE_PROC_NAME',Data^.ItemName,[loCaseInsensitive])
+              then
+                baseprice_id:= mds_baseprice.FieldByName('BASEPRICE_ID').AsInteger
+              else
                 begin
-//                  qryBaseprice.ParamByName('BASEPRICE_PROC_CODE').Value:= null;
-                  qryBaseprice.ParamByName('BASEPRICE_PROC_NAME').Value:= Data.PriceName;
+                  qryBaseprice.ParamByName('BASEPRICE_PROC_NAME').Value:= Data^.ItemName;
                   qryBaseprice.ParamByName('BASEPRICE_PROC_ISSUE_FK').Value:= laborissue_id;
                   qryBaseprice.ExecQuery;
                   baseprice_id:= qryBaseprice.FieldByName('BASEPRICE_ID').AsInteger;
-
-                  Data.PriceID:= baseprice_id;
-                  Data.DepartID:= laborissue_id;
                 end;
-              end;
-
+              Data^.PriceID:= baseprice_id;
+              Data^.DepartID:= laborissue_id;
             end;
 
             chNode:= chNode.NextSibling;
@@ -1977,36 +1902,106 @@ begin
         rNode:= rNode.NextSibling;
       end;
 
-      tmpTrans.Commit;
-
-
       //create new/update an existing price list
-//      case EditMode of
-//        emAdd:
-//          begin
-//            rNode:= vst.GetFirst;
-//
-//            while Assigned(rNode) do
-//            begin
-//              Data:= vst.GetNodeData(rNode);
-//              if Assigned(Data) then
-//              begin
-//                if (Data.CurrentChangeType <> tctDeleted) then
-//                begin
-//
-//                end;
-//              end;
-//
-//              rNode:= rNode.NextSibling;
-//            end;
-//          end;
-//        emEdit:
-//          begin
-//
-//          end;
-//      end;
+      qryPriceItemInsert.Close;
+      qryPriceItemInsert.SQL.Text:= SQLTextTblPriceItemInsert;
+      qryPriceItemInsert.Prepare;
 
-//      tmpTrans.Commit;
+      qryPriceItemUpdate.Close;
+      qryPriceItemUpdate.SQL.Text:= SQLTextTblPriceItemUpdate;
+      qryPriceItemUpdate.Prepare;
+
+      qryPriceItemDelete.Close;
+      qryPriceItemDelete.SQL.Text:= SQLTextTblPriceItemDelete;
+      qryPriceItemDelete.Prepare;
+
+      rNode:= vst.GetFirst;
+
+      case EditMode of
+        emAdd:
+          begin
+            while Assigned(rNode) do
+            begin
+              Data:= vst.GetNodeData(rNode);
+              if Assigned(Data) then
+                if (Data^.CurrentChangeType <> tctDeleted) then
+                  if (vsHasChildren in rNode.States) then
+                  begin
+                    chNode:= rNode^.FirstChild;
+
+                    while Assigned(chNode) do
+                    begin
+                      Data:= vst.GetNodeData(chNode);
+
+                      if Assigned(Data) then
+                        if (Data^.CurrentChangeType <> tctDeleted) then
+                        begin
+                          qryPriceItemInsert.ParamByName('FK_BASEPRICE').Value:= Data^.PriceID;
+                          qryPriceItemInsert.ParamByName('NAME_PRICE').Value:= PriceName;
+                          qryPriceItemInsert.ParamByName('COST_PROC_PRICE').Value:= Data^.CurrentCost;
+                          qryPriceItemInsert.ExecQuery;
+                        end;
+
+                      chNode:= chNode.NextSibling;
+                    end;
+                  end;
+              rNode:= rNode.NextSibling;
+            end;
+          end;
+        emEdit:
+          begin
+            while Assigned(rNode) do
+            begin
+              if (vsHasChildren in rNode.States) then
+              begin
+                chNode:= rNode^.FirstChild;
+
+                while Assigned(chNode) do
+                begin
+                  Data:= vst.GetNodeData(chNode);
+
+                  if Assigned(Data) then
+                    case Data^.CurrentChangeType of
+                      tctInserted:
+                            begin
+                              qryPriceItemInsert.ParamByName('FK_BASEPRICE').Value:= Data^.PriceID;
+                              qryPriceItemInsert.ParamByName('NAME_PRICE').Value:= PriceName;
+                              qryPriceItemInsert.ParamByName('COST_PROC_PRICE').Value:= Data^.CurrentCost;
+                              qryPriceItemInsert.ExecQuery;
+                            end;
+                       tctUpdated:
+                            case Data^.ExistStatus of
+                                   tctNew:
+                                      begin
+                                        qryPriceItemInsert.ParamByName('FK_BASEPRICE').Value:= Data^.PriceID;
+                                        qryPriceItemInsert.ParamByName('NAME_PRICE').Value:= PriceName;
+                                        qryPriceItemInsert.ParamByName('COST_PROC_PRICE').Value:= Data^.CurrentCost;
+                                        qryPriceItemInsert.ExecQuery;
+                                      end;
+                              tctExisting:
+                                      begin
+                                        qryPriceItemUpdate.ParamByName('COST_PROC_PRICE').Value:= Data^.CurrentCost;
+                                        qryPriceItemUpdate.ParamByName('FK_BASEPRICE').Value:= Data^.PriceID;
+                                        qryPriceItemUpdate.ParamByName('NAME_PRICE').Value:= PriceName;
+                                        qryPriceItemUpdate.ExecQuery;
+                                      end;
+                            end;
+                       tctDeleted:
+                            begin
+                              qryPriceItemDelete.ParamByName('FK_BASEPRICE').Value:= Data^.PriceID;
+                              qryPriceItemDelete.ParamByName('NAME_PRICE').Value:= PriceName;
+                              qryPriceItemDelete.ExecQuery;
+                            end;
+                    end;
+                  chNode:= chNode.NextSibling;
+                end;
+              end;
+              rNode:= rNode.NextSibling;
+            end;
+          end;
+      end;
+
+      tmpTrans.Commit;
     except
       on E: EFIBError do
       begin
@@ -2015,7 +2010,9 @@ begin
         Exit;
       end;
     end;
-//    actTreeShowOffExecute(Sender);
+
+    actPriceFillExecute(Sender);
+    actTreeShowOffExecute(Sender);
   finally
   end;
 end;
@@ -2098,7 +2095,7 @@ begin
       Data:= vst.GetNodeData(rNode);
       if Assigned(Data) then
       begin
-        if (Data.CurrentChangeType = tctDeleted)
+        if (Data^.CurrentChangeType = tctDeleted)
         then
           vst.IsVisible[rNode]:= not chbHideDelNode.Checked
         else
@@ -2112,7 +2109,7 @@ begin
                 Data:= vst.GetNodeData(chNode);
 
                 if Assigned(Data) then
-                  if (Data.CurrentChangeType = tctDeleted) then vst.IsVisible[chNode]:= not chbHideDelNode.Checked;
+                  if (Data^.CurrentChangeType = tctDeleted) then vst.IsVisible[chNode]:= not chbHideDelNode.Checked;
                 chNode:= chNode.NextSibling;
               end;
             end;
@@ -2266,7 +2263,7 @@ begin
   FDoctorID:= -1;
   FPriceName:= '';
   FFilterStr:= '';
-  FPickedNodeValue:= '';
+  FInitPriceItemValue:= '';
   FIsPickedNode:= False;
   FTreeChangeType:= tctInserted;
   FNodeSender:= nil;
@@ -2485,7 +2482,7 @@ begin
   begin
 //    FTreeChangeType:= Data.CurrentChangeType;
 
-    case Data.CurrentChangeType of
+    case Data^.CurrentChangeType of
       tctExisting: ss:= 'tctExisting';
       tctDeleted: ss:= 'tctDeleted';
       tctInserted: ss:= 'tctInserted';
@@ -2493,7 +2490,7 @@ begin
       tctNew: ss:= 'tctNew';
     end;
 
-    case Data.ExistStatus of
+    case Data^.ExistStatus of
       tctExisting: ss1:= 'tctExisting';
       tctDeleted: ss1:= 'tctDeleted';
       tctInserted: ss1:= 'tctInserted';
@@ -2504,7 +2501,7 @@ begin
     Self.Caption:= Format('PriceID: %d | DepartID: %d |  PriceName: %s | CurrentChangeType: %s | ExistStatus: %s | ',[
       Data^.PriceID,
       Data^.DepartID,
-      Data^.PriceName,
+      Data^.ItemName,
       ss,
       ss1
                             ]);
@@ -2626,7 +2623,7 @@ begin
     dmAbove:
       begin
         DataTarget:=Sender.GetNodeData(NodeTarget);
-        Self.Caption:= Self.Caption + ' | ' + DataTarget^.PriceName + ' | index = ' + IntToStr(NodeTarget^.Index);
+        Self.Caption:= Self.Caption + ' | ' + DataTarget^.ItemName + ' | index = ' + IntToStr(NodeTarget^.Index);
         NodeLvl:= Sender.GetNodeLevel(NodeTarget);
 
         case NodeLvl of
@@ -2637,7 +2634,7 @@ begin
     dmOnNode:
       begin
         DataTarget:=Sender.GetNodeData(NodeTarget);
-        Self.Caption:= Self.Caption + ' | ' + DataTarget^.PriceName + ' | index = ' + IntToStr(NodeTarget^.Index);
+        Self.Caption:= Self.Caption + ' | ' + DataTarget^.ItemName + ' | index = ' + IntToStr(NodeTarget^.Index);
         NodeLvl:= Sender.GetNodeLevel(NodeTarget);
 
         case NodeLvl of
@@ -2648,7 +2645,7 @@ begin
      dmBelow:
      begin
         DataTarget:=Sender.GetNodeData(NodeTarget);
-        Self.Caption:= Self.Caption + ' | ' + DataTarget^.PriceName + ' | index = ' + IntToStr(NodeTarget^.Index);
+        Self.Caption:= Self.Caption + ' | ' + DataTarget^.ItemName + ' | index = ' + IntToStr(NodeTarget^.Index);
         NodeLvl:= Sender.GetNodeLevel(NodeTarget);
 
         case NodeLvl of
@@ -2779,12 +2776,12 @@ begin
   case NodeLvl of
     0:
       case Column of
-        0: CellText:= Data^.PriceName;
+        0: CellText:= Data^.ItemName;
         1: CellText:= '';
       end;
     1:
       case Column of
-        0: CellText:= Data^.PriceName;
+        0: CellText:= Data^.ItemName;
         1: CellText:= Format('%2.2f %s',[Data^.CurrentCost, fs.CurrencyString]);
       end;
   end;
@@ -2889,12 +2886,12 @@ begin
   case NodeLvl of
     0:
       case Column of
-        0: Data^.PriceName:= NewText;
+        0: Data^.ItemName:= NewText;
 //        1: Exit;
       end;
     1:
       case Column of
-        0: Data^.PriceName:= NewText;
+        0: Data^.ItemName:= NewText;
         1:
           begin
             NewText:= StringReplace(NewText,'.',',',[rfReplaceAll, rfIgnoreCase]);

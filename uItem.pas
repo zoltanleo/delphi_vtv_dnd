@@ -160,7 +160,7 @@ begin
   if not Assigned(Data) then Exit;
 
   case Column of
-    0: CellText:= Data.ItemName;
+    0: CellText:= Data^.ItemName;
   end;
 
 end;

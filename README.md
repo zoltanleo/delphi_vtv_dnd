@@ -2,6 +2,9 @@
 
 VTV Manipulation Project
 
+#### 1.0.19
+- implemented tree modification and saving of results
+
 #### 1.0.18
 - all virtual tree events are set in the code at runtime
 

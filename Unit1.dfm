@@ -672,4 +672,22 @@ object Form1: TForm1
     Left = 498
     Top = 299
   end
+  object qryPriceItemInsert: TpFIBQuery
+    Transaction = tmpTrans
+    Database = tmpDB
+    Left = 610
+    Top = 235
+  end
+  object qryPriceItemUpdate: TpFIBQuery
+    Transaction = tmpTrans
+    Database = tmpDB
+    Left = 610
+    Top = 299
+  end
+  object qryPriceItemDelete: TpFIBQuery
+    Transaction = tmpTrans
+    Database = tmpDB
+    Left = 610
+    Top = 363
+  end
 end

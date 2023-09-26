@@ -2,8 +2,8 @@ object frmItem: TfrmItem
   Left = 0
   Top = 0
   Caption = 'frmItem'
-  ClientHeight = 420
-  ClientWidth = 424
+  ClientHeight = 419
+  ClientWidth = 420
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -16,19 +16,19 @@ object frmItem: TfrmItem
   object pnlTree: TPanel
     Left = 0
     Top = 0
-    Width = 424
-    Height = 381
+    Width = 420
+    Height = 380
     Align = alClient
     Caption = 'pnlTree'
     TabOrder = 0
     DesignSize = (
-      424
-      381)
+      420
+      380)
     object PriceTree: TVirtualStringTree
       Left = 8
       Top = 8
-      Width = 409
-      Height = 367
+      Width = 405
+      Height = 366
       Anchors = [akLeft, akTop, akRight, akBottom]
       Header.AutoSizeIndex = 0
       Header.MainColumn = -1
@@ -46,14 +46,14 @@ object frmItem: TfrmItem
   end
   object pnlBtns: TPanel
     Left = 0
-    Top = 381
-    Width = 424
+    Top = 380
+    Width = 420
     Height = 39
     Align = alBottom
     Caption = 'pnlBtns'
     TabOrder = 1
     DesignSize = (
-      424
+      420
       39)
     object lblEmptyWarninig: TLabel
       Left = 64
@@ -63,7 +63,7 @@ object frmItem: TfrmItem
       Caption = 'lblEmptyWarninig'
     end
     object btnSave: TButton
-      Left = 261
+      Left = 257
       Top = 7
       Width = 75
       Height = 25
@@ -73,7 +73,7 @@ object frmItem: TfrmItem
       ExplicitLeft = 269
     end
     object btnCancel: TButton
-      Left = 342
+      Left = 338
       Top = 7
       Width = 75
       Height = 25
