@@ -1,19 +1,19 @@
 ﻿[Closed Files]
 File_0=TSourceModule,'C:\Embarcadero\comp\EhLib_10_2_036\Common\MemTableDataEh.pas',0,1,7752,1,7765,0,0,,
-File_1=TSourceModule,'C:\Embarcadero\comp\fibplus\fib.pas',0,1,497,1,510,0,0,,
-File_2=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\source\rtl\common\System.Generics.Defaults.pas',0,1,265,1,10,0,0,,
-File_3=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\SOURCE\RTL\SYS\System.SysUtils.pas',0,1,1001,1,1014,0,0,,
-File_4=TSourceModule,'C:\proj\test_delphi\test\Unit1.pas',0,1,25,41,34,0,0,,
-File_5=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\SOURCE\RTL\SYS\System.Types.pas',0,1,274,1,209,0,0,,
-File_6=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\source\rtl\win\Winapi.Windows.pas',0,1,4132,27,4153,0,0,,
-File_7=TSourceModule,'C:\proj\armdoc_4\MKBUnit.pas',0,1,52,1,328,0,0,,
-File_8=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\source\data\Data.DB.pas',0,1,2471,1,2492,0,0,,
-File_9=TSourceModule,'C:\Embarcadero\comp\EhLib_10_2_036\Common\MemTableEh.pas',0,1,4723,45,4744,0,0,,
-File_10=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\SOURCE\VCL\Vcl.Controls.pas',0,1,1132,36,1153,0,0,,
-File_11=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\source\rtl\common\System.UITypes.pas',0,1,93,1,114,0,0,,
-File_12=TSourceModule,'C:\proj\test_delphi\db_test_2\Unit1.pas',0,1,79,58,766,0,0,{{131,0}
-File_13=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\SOURCE\RTL\SYS\System.pas',0,1,1,1,12,0,0,,
-File_14=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\SOURCE\VCL\Vcl.ComCtrls.pas',0,1,962,1,977,0,0,{{18131,0}
+File_1=TSourceModule,'C:\Embarcadero\comp\fibplus\FIBQuery.pas',0,1,6012,24,6023,0,0,,
+File_2=TSourceModule,'C:\Embarcadero\comp\fibplus\fib.pas',0,1,497,1,510,0,0,,
+File_3=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\source\rtl\common\System.Generics.Defaults.pas',0,1,265,1,10,0,0,,
+File_4=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\SOURCE\RTL\SYS\System.SysUtils.pas',0,1,1001,1,1014,0,0,,
+File_5=TSourceModule,'C:\proj\test_delphi\test\Unit1.pas',0,1,25,41,34,0,0,,
+File_6=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\SOURCE\RTL\SYS\System.Types.pas',0,1,274,1,209,0,0,,
+File_7=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\source\rtl\win\Winapi.Windows.pas',0,1,4132,27,4153,0,0,,
+File_8=TSourceModule,'C:\proj\armdoc_4\MKBUnit.pas',0,1,52,1,328,0,0,,
+File_9=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\source\data\Data.DB.pas',0,1,2471,1,2492,0,0,,
+File_10=TSourceModule,'C:\Embarcadero\comp\EhLib_10_2_036\Common\MemTableEh.pas',0,1,4723,45,4744,0,0,,
+File_11=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\SOURCE\VCL\Vcl.Controls.pas',0,1,1132,36,1153,0,0,,
+File_12=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\source\rtl\common\System.UITypes.pas',0,1,93,1,114,0,0,,
+File_13=TSourceModule,'C:\proj\test_delphi\db_test_2\Unit1.pas',0,1,79,58,766,0,0,{{131,0}
+File_14=TSourceModule,'c:\program files (x86)\embarcadero\studio\22.0\SOURCE\RTL\SYS\System.pas',0,1,1,1,12,0,0,,
 
 [Modules]
 Module0=C:\proj\test_delphi\delphi_vtv_dnd\Unit1.pas
@@ -69,12 +69,12 @@ TabDockRightClients=DockSite2=0,DockSite4=1
 [View0]
 CustomEditViewType=TEditView
 Module=C:\proj\test_delphi\delphi_vtv_dnd\Unit1.pas
-CursorX=38
-CursorY=1203
-TopLine=1193
+CursorX=81
+CursorY=2485
+TopLine=2502
 LeftCol=1
-Elisions={{334,2},{407,13},{'report SQLText'}}{{418,52},{437,3},{''}}{{439,56},{444,3},{''}}{{446,55},{460,3},{''}}{{609,60},{623,3},{''}}{{625,59},{657,3},{''}}{{659,58},{709,3},{''}}{{945,56},{958,3},{''}}{{960,59},{963,3},{''}}{{981,58},{1006,6},{''}}{{1008,59},{1042,6},{''}}{{1061,2},{1091,13},{'debuging'}}
-Bookmarks={0,2291,30}{1,2450,16}{2,2184,35}{3,1587,6}{5,1405,104}{6,2675,1}{7,266,15}{8,1977,89}{9,1231,1}
+Elisions=
+Bookmarks={0,2356,28}{1,2468,1}{2,765,7}{3,453,1}{4,1675,24}{5,1466,1}{6,2733,1}{7,268,15}{8,2040,44}{9,2071,25}
 EditViewName=C:\proj\test_delphi\delphi_vtv_dnd\Unit1.pas
 
 [View1]
@@ -268,6 +268,11 @@ LRDockWidth=2160
 Dockable=1
 StayOnTop=0
 SplitPos=140
+
+[PropInspDesignerSelection]
+ArrangeBy=Name
+SelectedItem=AutoCheck,
+ExpandedItems=Anchors=0,BorderIcons=0,"LiveBindings Designer=0"
 
 [DebugLogView]
 PercentageSizes=1

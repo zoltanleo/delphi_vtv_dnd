@@ -122,6 +122,8 @@ type
     qryPriceItemInsert: TpFIBQuery;
     qryPriceItemUpdate: TpFIBQuery;
     qryPriceItemDelete: TpFIBQuery;
+    actGetCommonData: TAction;
+    actSetPriceFilter: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure cbbPriceChange(Sender: TObject);
@@ -182,6 +184,8 @@ type
     procedure actPriceDelExecute(Sender: TObject);
     procedure edtCodeLiterKeyPress(Sender: TObject; var Key: Char);
     procedure ActItemSelectExecute(Sender: TObject);
+    procedure actGetCommonDataExecute(Sender: TObject);
+    procedure actSetPriceFilterExecute(Sender: TObject);
   private
     FClinicID: Integer;
     FPeolpeID: Integer;
@@ -436,9 +440,22 @@ begin
   if edtPriceName.CanFocus then edtPriceName.SetFocus;
 end;
 
+procedure TForm1.actSetPriceFilterExecute(Sender: TObject);
+begin
+  if not mds_common.Active then Exit;
+
+  mds_common.DisableControls;
+  try
+    mds_common.Filtered:= False;
+    mds_common.Filter:= Format('UPPER(NAME_PRICE) LIKE UPPER(''%%%s%%'')',[PriceName]);
+    mds_common.Filtered:= True;
+  finally
+    mds_common.EnableControls;
+  end;
+end;
+
 procedure TForm1.actTreeShowOffExecute(Sender: TObject);
 begin
-//  EditMode:= emEdit;
   pnlTbl.Visible:= True;
   pnlTree.Visible:= not pnlTbl.Visible;
 end;
@@ -447,8 +464,6 @@ procedure TForm1.actTreeShowOnExecute(Sender: TObject);
 var
   Node: PVirtualNode;
 begin
-//  actPriceFillExecute(Sender);
-
   chbSetZeroCost.Enabled:= (EditMode = emAdd);
   chbShowUpdatedPrice.Enabled:= (EditMode = emEdit);
 
@@ -706,6 +721,67 @@ begin
   pnlItemSelect.Align:= alRight;
   pnlEdtCost.Align:= alRight;
   pnlEdtCodeLiter.Align:= alRight;
+end;
+
+procedure TForm1.actGetCommonDataExecute(Sender: TObject);
+begin
+  try
+    mds_common.DisableControls;
+
+    if mds_common.Active
+    then mds_common.EmptyTable
+    else mds_common.Active:= True;
+
+    if mds_src.Active
+      then mds_src.EmptyTable
+      else mds_src.Active:= True;
+
+    try
+      tmpTrans.StartTransaction;
+
+      with tmpQry do
+      begin
+        Close;
+        SQL.Text:= SQLTextResultSelect;
+        ExecQuery;
+
+        while not Eof do
+        begin
+             mds_common.AppendRecord([
+                  FieldByName('BASEPRICE_ID').AsInteger,
+                  FieldByName('BASEPRICE_PROC_NAME').AsString,
+                  FieldByName('COST_PROC_PRICE').AsCurrency,
+                  FieldByName('LABORISSUE_ID').AsInteger,
+                  FieldByName('LABORISSUE_NAME').AsString,
+                  FieldByName('LABORISSUE_CODELITER').AsString,
+                  FieldByName('NAME_PRICE').AsString
+                                ]);
+
+             mds_src.AppendRecord([
+                  FieldByName('BASEPRICE_ID').AsInteger,
+                  FieldByName('BASEPRICE_PROC_NAME').AsString,
+                  FieldByName('COST_PROC_PRICE').AsCurrency,
+                  FieldByName('LABORISSUE_ID').AsInteger,
+                  FieldByName('LABORISSUE_NAME').AsString,
+                  FieldByName('LABORISSUE_CODELITER').AsString,
+                  FieldByName('NAME_PRICE').AsString
+                                ]);
+          Next;
+        end;
+      end;
+      tmpTrans.Commit;
+
+      mds_common.First;
+    except
+      on E: EFIBError do
+      begin
+        tmpTrans.Rollback;
+        Application.MessageBox(PChar(E.Message), 'Ошибка доступа к данным', MB_ICONERROR);
+      end;
+    end;
+  finally
+    mds_common.EnableControls;
+  end;
 end;
 
 procedure TForm1.ActItemSelectExecute(Sender: TObject);
@@ -1547,7 +1623,8 @@ end;
 procedure TForm1.actPriceAddExecute(Sender: TObject);
 begin
   EditMode:= emAdd;
-  PriceName:= '';
+//  PriceName:= '';
+  cbbPriceChange(Sender);
   actPriceFillExecute(Sender);
   actTreeShowOnExecute(Sender);
 end;
@@ -1559,13 +1636,34 @@ end;
 
 procedure TForm1.actPriceDelExecute(Sender: TObject);
 begin
-  if mds_laborissue.IsEmpty then Exit;
+//  if mds_laborissue.IsEmpty then Exit;
+
+  try
+    tmpTrans.StartTransaction;
+    tmpQry.Close;
+    tmpQry.SQL.Text:= SQLTextTblPriceDelete;
+    tmpQry.Prepare;
+    tmpQry.ParamByName('NAME_PRICE').Value:= cbbPrice.Items[cbbPrice.ItemIndex];
+    tmpQry.ExecQuery;
+
+    tmpTrans.Commit;
+
+    FillCbbPrice(Sender);
+    cbbPriceChange(Sender);
+  except
+    on E: EFIBError do
+    begin
+      tmpTrans.Rollback;
+      Application.MessageBox(PChar(E.Message), 'Ошибка удаления данных', MB_ICONERROR);
+    end;
+  end;
 end;
 
 procedure TForm1.actPriceEdtExecute(Sender: TObject);
 begin
   EditMode:= emEdit;
-  PriceName:= cbbPrice.Items[cbbPrice.ItemIndex];
+//  PriceName:= cbbPrice.Items[cbbPrice.ItemIndex];
+  cbbPriceChange(Sender);
   actPriceFillExecute(Sender);
   actTreeShowOnExecute(Sender);
 end;
@@ -1594,7 +1692,7 @@ begin
     vst.BeginUpdate;
     vst.Clear;
 
-    mds_common.DisableControls;
+//    mds_common.DisableControls;
 
     try
       tmpTrans.StartTransaction;
@@ -1641,14 +1739,14 @@ begin
 
     while not mds_laborissue.Eof do
     begin
-      mds_common.Filtered:= False;
-      mds_common.Filter:= Format('(UPPER(NAME_PRICE) LIKE UPPER(''%%%s%%'')) AND (LABORISSUE_ID=%d)',
-                                [PriceName, mds_laborissue.FieldByName('LABORISSUE_ID').AsInteger]);
-      mds_common.Filtered:= True;
+      mds_src.Filtered:= False;
+      mds_src.Filter:= Format('(UPPER(NAME_PRICE) LIKE UPPER(''%%%s%%'')) AND (LABORISSUE_ID=%d)',
+                                    [PriceName,mds_laborissue.FieldByName('LABORISSUE_ID').AsInteger]);
+      mds_src.Filtered:= True;
 
-      if not mds_common.IsEmpty then
+      if not mds_src.IsEmpty then
       begin
-        mds_common.First;
+        mds_src.First;
 
         Node:= vst.AddChild(nil);
         Data:= vst.GetNodeData(Node);
@@ -1656,16 +1754,6 @@ begin
         RootID:= 0;
         FTreeChangeType:= tctExisting;
 
-//        case EditMode of
-//          emAdd:
-//            begin
-//              NodeID:= vst.AbsoluteIndex(Node);
-//            end;
-//          emEdit:
-//            begin
-//              NodeID:= mds_common.FieldByName('BASEPRICE_ID').AsInteger;
-//            end;
-//        end;
 
         if Assigned(Data) then
         begin
@@ -1674,21 +1762,21 @@ begin
           Data^.CurrentChangeType:= TreeChangeType;
           Data^.LastChangeType:= TreeChangeType;
           Data^.ExistStatus:= TreeChangeType;
-          Data^.ItemName:= mds_common.FieldByName('LABORISSUE_NAME').AsString;
+          Data^.ItemName:= mds_src.FieldByName('LABORISSUE_NAME').AsString;
           Data^.CurrentCost:= 0;
           Data^.InitCost:= 0;
-          Data^.CodeLiter:= mds_common.FieldByName('LABORISSUE_CODELITER').AsString;
+          Data^.CodeLiter:= mds_src.FieldByName('LABORISSUE_CODELITER').AsString;
 
 //          RootID:= NodeID;
 
-          while not mds_common.Eof do
+          while not mds_src.Eof do
           begin
             ChdNode:= vst.AddChild(Node);
             Data:= vst.GetNodeData(ChdNode);
 
 //            case EditMode of
 //              emAdd: NodeID:= vst.AbsoluteIndex(ChdNode);
-//              emEdit: NodeID:= mds_common.FieldByName('BASEPRICE_ID').AsInteger;
+//              emEdit: NodeID:= mds_src.FieldByName('BASEPRICE_ID').AsInteger;
 //            end;
 
             if Assigned(Data) then
@@ -1698,27 +1786,27 @@ begin
               Data^.CurrentChangeType:= TreeChangeType;
               Data^.LastChangeType:= TreeChangeType;
               Data^.ExistStatus:= TreeChangeType;
-              Data^.ItemName:= mds_common.FieldByName('BASEPRICE_PROC_NAME').AsString;
-              Data^.CurrentCost:= mds_common.FieldByName('COST_PROC_PRICE').AsCurrency;
-              Data^.InitCost:= mds_common.FieldByName('COST_PROC_PRICE').AsCurrency;
+              Data^.ItemName:= mds_src.FieldByName('BASEPRICE_PROC_NAME').AsString;
+              Data^.CurrentCost:= mds_src.FieldByName('COST_PROC_PRICE').AsCurrency;
+              Data^.InitCost:= mds_src.FieldByName('COST_PROC_PRICE').AsCurrency;
               Data^.CodeLiter:= '';
             end;
 
-            mds_common.Next;
+            mds_src.Next;
           end;
 
         end;{Assigned(Data) of Node}
-      end; {not mds_common.IsEmpty}
+      end; {not mds_src.IsEmpty}
 
       mds_laborissue.Next;
     end;
   finally
 
-    mds_common.Filtered:= False;
-    mds_common.Filter:= Format('UPPER(NAME_PRICE) LIKE UPPER(''%%%s%%'')',[PriceName]);
-    mds_common.Filtered:= True;
+    mds_src.Filtered:= False;
+//    mds_src.Filter:= Format('UPPER(NAME_PRICE) LIKE UPPER(''%%%s%%'')',[PriceName]);
+//    mds_src.Filtered:= True;
 
-    mds_common.EnableControls;
+//    mds_src.EnableControls;
     vst.EndUpdate;
   end;
 end;
@@ -1731,306 +1819,296 @@ var
 begin
   if (vst.RootNodeCount = 0) then Exit;
 
-  try
-    rNode:= nil;
-    chNode:= nil;
-    laborissue_id:= -1;
-    baseprice_id:= -1;
+  rNode:= nil;
+  chNode:= nil;
+  laborissue_id:= -1;
+  baseprice_id:= -1;
 
-    if (EditMode = emAdd) then
+  if (EditMode = emAdd) then
+    if (Trim(edtSetPriceName.Text) = '') then
     begin
-      if (Trim(edtSetPriceName.Text) = '') then
-      begin
-        Application.MessageBox('Задайте имя прайс-листа!','Некорректные данные',MB_ICONINFORMATION);
-        if edtSetPriceName.CanFocus then edtSetPriceName.SetFocus;
-        Exit;
-      end;
+      Application.MessageBox('Задайте имя прайс-листа!','Некорректные данные',MB_ICONINFORMATION);
+      if edtSetPriceName.CanFocus then edtSetPriceName.SetFocus;
+      Exit;
+    end;
 
-      try
-        tmpTrans.StartTransaction;
+  try
+    tmpTrans.StartTransaction;
 
-        //==== getting a list of price names into mds_price ====//
-        tmpQry.Close;
-        tmpQry.SQL.Text:= SQLTextTblPriceSelect;
-        tmpQry.ExecQuery;
+    //==== getting a list of price names into mds_price ====//
+    tmpQry.Close;
+    tmpQry.SQL.Text:= SQLTextTblPriceSelect;
+    tmpQry.ExecQuery;
 
-        if mds_price.Active
-          then mds_price.EmptyTable
-          else mds_price.Active:= True;
+    if mds_price.Active
+      then mds_price.EmptyTable
+      else mds_price.Active:= True;
 
-        while not tmpQry.Eof do
-        begin
-          mds_price.AppendRecord([
-                    tmpQry.FieldByName('ID_PRICE').AsInteger,
-                    tmpQry.FieldByName('NAME_PRICE').AsString
+    while not tmpQry.Eof do
+    begin
+      mds_price.AppendRecord([
+                tmpQry.FieldByName('ID_PRICE').AsInteger,
+                tmpQry.FieldByName('NAME_PRICE').AsString
+                              ]);
+      tmpQry.Next;
+    end;
+
+    tmpTrans.Commit;
+  except
+    on E: EFIBError do
+    begin
+      tmpTrans.Rollback;
+      Application.MessageBox(PChar(E.Message), 'Ошибка доступа к данным', MB_ICONERROR);
+      Exit;
+    end;
+  end;
+
+  if (EditMode = emAdd) then
+  begin
+    if mds_price.Locate('NAME_PRICE', Trim(edtSetPriceName.Text),[loCaseInsensitive]) then
+    begin
+      Application.MessageBox('Такое имя прайс-листа уже есть в базе данных. Задайте другое!','Некорректные данные',MB_ICONINFORMATION);
+      if edtSetPriceName.CanFocus then edtSetPriceName.SetFocus;
+      Exit;
+    end;
+
+    PriceName:= Trim(edtSetPriceName.Text);
+  end;
+
+  try
+    //==== getting a list of laboratory sections into mds_laborissue ====//
+    tmpTrans.StartTransaction;
+    tmpQry.Close;
+    tmpQry.SQL.Text:= SQLTextTblLaborIssueSelect;
+    tmpQry.ExecQuery;
+
+    if mds_laborissue.Active
+      then mds_laborissue.EmptyTable
+      else mds_laborissue.Active:= True;
+
+    while not tmpQry.Eof do
+    begin
+      mds_laborissue.AppendRecord([
+        tmpQry.FieldByName('LABORISSUE_ID').AsInteger,
+        tmpQry.FieldByName('LABORISSUE_NAME').AsString,
+        tmpQry.FieldByName('LABORISSUE_CODELITER').AsString
                                   ]);
-          tmpQry.Next;
-        end;
-
-        tmpTrans.Commit;
-      except
-        on E: EFIBError do
-        begin
-          tmpTrans.Rollback;
-          Application.MessageBox(PChar(E.Message), 'Ошибка доступа к данным', MB_ICONERROR);
-          Exit;
-        end;
-      end;
-
-      if mds_price.Locate('NAME_PRICE', Trim(edtSetPriceName.Text),[loCaseInsensitive]) then
-      begin
-        Application.MessageBox('Такое имя прайс-листа уже есть в базе данных. Задайте другое!','Некорректные данные',MB_ICONINFORMATION);
-        if edtSetPriceName.CanFocus then edtSetPriceName.SetFocus;
-        Exit;
-      end;
-
-      PriceName:= Trim(edtSetPriceName.Text);
+      tmpQry.Next;
     end;
 
-    try
-      //==== getting a list of laboratory sections into mds_laborissue ====//
-      tmpTrans.StartTransaction;
-      tmpQry.Close;
-      tmpQry.SQL.Text:= SQLTextTblLaborIssueSelect;
-      tmpQry.ExecQuery;
+    //==== getting a list of the basic price items into mds_baseprice  ====//
+    tmpQry.Close;
+    tmpQry.SQL.Text:= SQLTextTblBasepriceSelect;
+    tmpQry.ExecQuery;
 
-      if mds_laborissue.Active
-        then mds_laborissue.EmptyTable
-        else mds_laborissue.Active:= True;
+    if mds_baseprice.Active
+      then mds_baseprice.EmptyTable
+      else mds_baseprice.Active:= True;
 
-      while not tmpQry.Eof do
-      begin
-        mds_laborissue.AppendRecord([
-          tmpQry.FieldByName('LABORISSUE_ID').AsInteger,
-          tmpQry.FieldByName('LABORISSUE_NAME').AsString,
-          tmpQry.FieldByName('LABORISSUE_CODELITER').AsString
-                                    ]);
-        tmpQry.Next;
-      end;
-
-      //==== getting a list of the basic price items into mds_baseprice  ====//
-      tmpQry.Close;
-      tmpQry.SQL.Text:= SQLTextTblBasepriceSelect;
-      tmpQry.ExecQuery;
-
-      if mds_baseprice.Active
-        then mds_baseprice.EmptyTable
-        else mds_baseprice.Active:= True;
-
-      while not tmpQry.Eof do
-      begin
-        mds_baseprice.AppendRecord([
-          tmpQry.FieldByName('BASEPRICE_ID').AsInteger,
-          tmpQry.FieldByName('BASEPRICE_PROC_CODE').AsString,
-          tmpQry.FieldByName('BASEPRICE_PROC_NAME').AsString,
-          tmpQry.FieldByName('BASEPRICE_PROC_ISSUE_FK').AsInteger
-                                    ]);
-        tmpQry.Next;
-      end;
-
-      tmpTrans.Commit;
-    except
-        on E: EFIBError do
-        begin
-          tmpTrans.Rollback;
-          Application.MessageBox(PChar(E.Message), 'Ошибка доступа к данным', MB_ICONERROR);
-          Exit;
-        end;
+    while not tmpQry.Eof do
+    begin
+      mds_baseprice.AppendRecord([
+        tmpQry.FieldByName('BASEPRICE_ID').AsInteger,
+        tmpQry.FieldByName('BASEPRICE_PROC_CODE').AsString,
+        tmpQry.FieldByName('BASEPRICE_PROC_NAME').AsString,
+        tmpQry.FieldByName('BASEPRICE_PROC_ISSUE_FK').AsInteger
+                                  ]);
+      tmpQry.Next;
     end;
 
-    //adding the missing entries in the laborissue and baseprice tables
-    try
-      tmpTrans.StartTransaction;
-      qryLaborissue.Close;
-      qryLaborissue.SQL.Text:= SQLTextTblLaborIssueInsert;
-      qryLaborissue.Prepare;
-
-      qryBaseprice.Close;
-      qryBaseprice.SQL.Text:= SQLTextTblBasepriceInsert;
-      qryBaseprice.Prepare;
-
-      rNode:= vst.GetFirst;
-
-      while Assigned(rNode) do
-      begin
-        Data:= vst.GetNodeData(rNode);
-        if Assigned(Data) then
-        begin
-          if mds_laborissue.Locate('LABORISSUE_NAME', Data^.ItemName,[loCaseInsensitive])
-          then
-            laborissue_id:= mds_laborissue.FieldByName('LABORISSUE_ID').AsInteger
-          else
-            begin
-              qryLaborissue.ParamByName('LABORISSUE_NAME').Value:= Data^.ItemName;
-              qryLaborissue.ParamByName('LABORISSUE_CODELITER').Value:= Data^.CodeLiter;
-              qryLaborissue.ExecQuery;
-              laborissue_id:= qryLaborissue.FieldByName('LABORISSUE_ID').AsInteger;
-            end;
-
-          Data^.PriceID:= laborissue_id;
-          Data^.DepartID:= 0;
-        end;
-
-        if (vsHasChildren in rNode.States) then
-        begin
-          chNode:= rNode^.FirstChild;
-
-          while Assigned(chNode) do
-          begin
-            Data:= vst.GetNodeData(chNode);
-
-            if Assigned(Data) then
-            begin
-              if mds_baseprice.Locate('BASEPRICE_PROC_NAME',Data^.ItemName,[loCaseInsensitive])
-              then
-                baseprice_id:= mds_baseprice.FieldByName('BASEPRICE_ID').AsInteger
-              else
-                begin
-                  qryBaseprice.ParamByName('BASEPRICE_PROC_NAME').Value:= Data^.ItemName;
-                  qryBaseprice.ParamByName('BASEPRICE_PROC_ISSUE_FK').Value:= laborissue_id;
-                  qryBaseprice.ExecQuery;
-                  baseprice_id:= qryBaseprice.FieldByName('BASEPRICE_ID').AsInteger;
-                end;
-              Data^.PriceID:= baseprice_id;
-              Data^.DepartID:= laborissue_id;
-            end;
-
-            chNode:= chNode.NextSibling;
-          end;
-        end;
-
-        rNode:= rNode.NextSibling;
-      end;
-
-      //create new/update an existing price list
-      qryPriceItemInsert.Close;
-      qryPriceItemInsert.SQL.Text:= SQLTextTblPriceItemInsert;
-      qryPriceItemInsert.Prepare;
-
-      qryPriceItemUpdate.Close;
-      qryPriceItemUpdate.SQL.Text:= SQLTextTblPriceItemUpdate;
-      qryPriceItemUpdate.Prepare;
-
-      qryPriceItemDelete.Close;
-      qryPriceItemDelete.SQL.Text:= SQLTextTblPriceItemDelete;
-      qryPriceItemDelete.Prepare;
-
-      rNode:= vst.GetFirst;
-
-      case EditMode of
-        emAdd:
-          begin
-            while Assigned(rNode) do
-            begin
-              Data:= vst.GetNodeData(rNode);
-              if Assigned(Data) then
-                if (Data^.CurrentChangeType <> tctDeleted) then
-                  if (vsHasChildren in rNode.States) then
-                  begin
-                    chNode:= rNode^.FirstChild;
-
-                    while Assigned(chNode) do
-                    begin
-                      Data:= vst.GetNodeData(chNode);
-
-                      if Assigned(Data) then
-                        if (Data^.CurrentChangeType <> tctDeleted) then
-                        begin
-                          qryPriceItemInsert.ParamByName('FK_BASEPRICE').Value:= Data^.PriceID;
-                          qryPriceItemInsert.ParamByName('NAME_PRICE').Value:= PriceName;
-                          qryPriceItemInsert.ParamByName('COST_PROC_PRICE').Value:= Data^.CurrentCost;
-                          qryPriceItemInsert.ExecQuery;
-                        end;
-
-                      chNode:= chNode.NextSibling;
-                    end;
-                  end;
-              rNode:= rNode.NextSibling;
-            end;
-          end;
-        emEdit:
-          begin
-            while Assigned(rNode) do
-            begin
-              if (vsHasChildren in rNode.States) then
-              begin
-                chNode:= rNode^.FirstChild;
-
-                while Assigned(chNode) do
-                begin
-                  Data:= vst.GetNodeData(chNode);
-
-                  if Assigned(Data) then
-                    case Data^.CurrentChangeType of
-                      tctInserted:
-                            begin
-                              qryPriceItemInsert.ParamByName('FK_BASEPRICE').Value:= Data^.PriceID;
-                              qryPriceItemInsert.ParamByName('NAME_PRICE').Value:= PriceName;
-                              qryPriceItemInsert.ParamByName('COST_PROC_PRICE').Value:= Data^.CurrentCost;
-                              qryPriceItemInsert.ExecQuery;
-                            end;
-                       tctUpdated:
-                            case Data^.ExistStatus of
-                                   tctNew:
-                                      begin
-                                        qryPriceItemInsert.ParamByName('FK_BASEPRICE').Value:= Data^.PriceID;
-                                        qryPriceItemInsert.ParamByName('NAME_PRICE').Value:= PriceName;
-                                        qryPriceItemInsert.ParamByName('COST_PROC_PRICE').Value:= Data^.CurrentCost;
-                                        qryPriceItemInsert.ExecQuery;
-                                      end;
-                              tctExisting:
-                                      begin
-                                        qryPriceItemUpdate.ParamByName('COST_PROC_PRICE').Value:= Data^.CurrentCost;
-                                        qryPriceItemUpdate.ParamByName('FK_BASEPRICE').Value:= Data^.PriceID;
-                                        qryPriceItemUpdate.ParamByName('NAME_PRICE').Value:= PriceName;
-                                        qryPriceItemUpdate.ExecQuery;
-                                      end;
-                            end;
-                       tctDeleted:
-                            begin
-                              qryPriceItemDelete.ParamByName('FK_BASEPRICE').Value:= Data^.PriceID;
-                              qryPriceItemDelete.ParamByName('NAME_PRICE').Value:= PriceName;
-                              qryPriceItemDelete.ExecQuery;
-                            end;
-                    end;
-                  chNode:= chNode.NextSibling;
-                end;
-              end;
-              rNode:= rNode.NextSibling;
-            end;
-          end;
-      end;
-
-      tmpTrans.Commit;
-    except
+    tmpTrans.Commit;
+  except
       on E: EFIBError do
       begin
         tmpTrans.Rollback;
-        Application.MessageBox(PChar(E.Message), 'Ошибка модификации данных', MB_ICONERROR);
+        Application.MessageBox(PChar(E.Message), 'Ошибка доступа к данным', MB_ICONERROR);
         Exit;
       end;
+  end;
+
+  //adding the missing entries in the laborissue and baseprice tables
+  try
+    tmpTrans.StartTransaction;
+    qryLaborissue.Close;
+    qryLaborissue.SQL.Text:= SQLTextTblLaborIssueInsert;
+    qryLaborissue.Prepare;
+
+    qryBaseprice.Close;
+    qryBaseprice.SQL.Text:= SQLTextTblBasepriceInsert;
+    qryBaseprice.Prepare;
+
+    rNode:= vst.GetFirst;
+
+    while Assigned(rNode) do
+    begin
+      Data:= vst.GetNodeData(rNode);
+      if Assigned(Data) then
+      begin
+        if mds_laborissue.Locate('LABORISSUE_NAME', Data^.ItemName,[loCaseInsensitive])
+        then
+          laborissue_id:= mds_laborissue.FieldByName('LABORISSUE_ID').AsInteger
+        else
+          begin
+            qryLaborissue.ParamByName('LABORISSUE_NAME').Value:= Data^.ItemName;
+            qryLaborissue.ParamByName('LABORISSUE_CODELITER').Value:= Data^.CodeLiter;
+            qryLaborissue.ExecQuery;
+            laborissue_id:= qryLaborissue.FieldByName('LABORISSUE_ID').AsInteger;
+          end;
+
+        Data^.PriceID:= laborissue_id;
+        Data^.DepartID:= 0;
+      end;
+
+      if (vsHasChildren in rNode.States) then
+      begin
+        chNode:= rNode^.FirstChild;
+
+        while Assigned(chNode) do
+        begin
+          Data:= vst.GetNodeData(chNode);
+
+          if Assigned(Data) then
+          begin
+            if mds_baseprice.Locate('BASEPRICE_PROC_NAME',Data^.ItemName,[loCaseInsensitive])
+            then
+              baseprice_id:= mds_baseprice.FieldByName('BASEPRICE_ID').AsInteger
+            else
+              begin
+                qryBaseprice.ParamByName('BASEPRICE_PROC_NAME').Value:= Data^.ItemName;
+                qryBaseprice.ParamByName('BASEPRICE_PROC_ISSUE_FK').Value:= laborissue_id;
+                qryBaseprice.ExecQuery;
+                baseprice_id:= qryBaseprice.FieldByName('BASEPRICE_ID').AsInteger;
+              end;
+            Data^.PriceID:= baseprice_id;
+            Data^.DepartID:= laborissue_id;
+          end;
+
+          chNode:= chNode.NextSibling;
+        end;
+      end;
+
+      rNode:= rNode.NextSibling;
     end;
 
-    actPriceFillExecute(Sender);
-    actTreeShowOffExecute(Sender);
-  finally
+    //create new/update an existing price list
+    qryPriceItemInsert.Close;
+    qryPriceItemInsert.SQL.Text:= SQLTextTblPriceItemInsert;
+    qryPriceItemInsert.Prepare;
+
+    qryPriceItemUpdate.Close;
+    qryPriceItemUpdate.SQL.Text:= SQLTextTblPriceItemUpdate;
+    qryPriceItemUpdate.Prepare;
+
+    qryPriceItemDelete.Close;
+    qryPriceItemDelete.SQL.Text:= SQLTextTblPriceItemDelete;
+    qryPriceItemDelete.Prepare;
+
+    rNode:= vst.GetFirst;
+
+    case EditMode of
+      emAdd:
+        begin
+          while Assigned(rNode) do
+          begin
+            Data:= vst.GetNodeData(rNode);
+            if Assigned(Data) then
+              if (Data^.CurrentChangeType <> tctDeleted) then
+                if (vsHasChildren in rNode.States) then
+                begin
+                  chNode:= rNode^.FirstChild;
+
+                  while Assigned(chNode) do
+                  begin
+                    Data:= vst.GetNodeData(chNode);
+
+                    if Assigned(Data) then
+                      if (Data^.CurrentChangeType <> tctDeleted) then
+                      begin
+                        qryPriceItemInsert.ParamByName('FK_BASEPRICE').Value:= Data^.PriceID;
+                        qryPriceItemInsert.ParamByName('NAME_PRICE').Value:= PriceName;
+                        qryPriceItemInsert.ParamByName('COST_PROC_PRICE').Value:= Data^.CurrentCost;
+                        qryPriceItemInsert.ExecQuery;
+                      end;
+
+                    chNode:= chNode.NextSibling;
+                  end;
+                end;
+            rNode:= rNode.NextSibling;
+          end;
+        end;
+      emEdit:
+        begin
+          while Assigned(rNode) do
+          begin
+            if (vsHasChildren in rNode.States) then
+            begin
+              chNode:= rNode^.FirstChild;
+
+              while Assigned(chNode) do
+              begin
+                Data:= vst.GetNodeData(chNode);
+
+                if Assigned(Data) then
+                  case Data^.CurrentChangeType of
+                    tctInserted:
+                          begin
+                            qryPriceItemInsert.ParamByName('FK_BASEPRICE').Value:= Data^.PriceID;
+                            qryPriceItemInsert.ParamByName('NAME_PRICE').Value:= PriceName;
+                            qryPriceItemInsert.ParamByName('COST_PROC_PRICE').Value:= Data^.CurrentCost;
+                            qryPriceItemInsert.ExecQuery;
+                          end;
+                     tctUpdated:
+                          case Data^.ExistStatus of
+                                 tctNew:
+                                    begin
+                                      qryPriceItemInsert.ParamByName('FK_BASEPRICE').Value:= Data^.PriceID;
+                                      qryPriceItemInsert.ParamByName('NAME_PRICE').Value:= PriceName;
+                                      qryPriceItemInsert.ParamByName('COST_PROC_PRICE').Value:= Data^.CurrentCost;
+                                      qryPriceItemInsert.ExecQuery;
+                                    end;
+                            tctExisting:
+                                    begin
+                                      qryPriceItemUpdate.ParamByName('COST_PROC_PRICE').Value:= Data^.CurrentCost;
+                                      qryPriceItemUpdate.ParamByName('FK_BASEPRICE').Value:= Data^.PriceID;
+                                      qryPriceItemUpdate.ParamByName('NAME_PRICE').Value:= PriceName;
+                                      qryPriceItemUpdate.ExecQuery;
+                                    end;
+                          end;
+                     tctDeleted:
+                          begin
+                            qryPriceItemDelete.ParamByName('FK_BASEPRICE').Value:= Data^.PriceID;
+                            qryPriceItemDelete.ParamByName('NAME_PRICE').Value:= PriceName;
+                            qryPriceItemDelete.ExecQuery;
+                          end;
+                  end;
+                chNode:= chNode.NextSibling;
+              end;
+            end;
+            rNode:= rNode.NextSibling;
+          end;
+        end;
+    end;
+
+    tmpTrans.Commit;
+  except
+    on E: EFIBError do
+    begin
+      tmpTrans.Rollback;
+      Application.MessageBox(PChar(E.Message), 'Ошибка модификации данных', MB_ICONERROR);
+      Exit;
+    end;
   end;
+
+  actGetCommonDataExecute(Sender);
+  FillCbbPrice(Sender);
+  actSetPriceFilterExecute(Sender);
+  actTreeShowOffExecute(Sender);
 end;
 
 procedure TForm1.cbbPriceChange(Sender: TObject);
 begin
   FPriceName:= cbbPrice.Items[cbbPrice.ItemIndex];
-
-  if not mds_common.Active then Exit;
-
-  mds_common.DisableControls;
-  try
-    mds_common.Filtered:= False;
-    mds_common.Filter:= Format('UPPER(NAME_PRICE) LIKE UPPER(''%%%s%%'')',[PriceName]);
-    mds_common.Filtered:= True;
-  finally
-    mds_common.EnableControls;
-  end;
+  actSetPriceFilterExecute(Sender);
 end;
 
 procedure TForm1.chbSetZeroCostClick(Sender: TObject);
@@ -2409,64 +2487,58 @@ procedure TForm1.FormShow(Sender: TObject);
 begin
   tmpDB.Connected:= True;
 
-  if mds_common.Active
-    then mds_common.EmptyTable
-    else mds_common.Active:= True;
-
-  if mds_src.Active
-    then mds_src.EmptyTable
-    else mds_src.Active:= True;
-
+  actGetCommonDataExecute(Sender);
 
   try
     mds_common.DisableControls;
-    try
-      tmpTrans.StartTransaction;
 
-      with tmpQry do
-      begin
-        Close;
-        SQL.Text:= SQLTextResultSelect;
-        ExecQuery;
+//    try
 
-        while not Eof do
-        begin
-             mds_common.AppendRecord([
-                  FieldByName('BASEPRICE_ID').AsInteger,
-                  FieldByName('BASEPRICE_PROC_NAME').AsString,
-                  FieldByName('COST_PROC_PRICE').AsCurrency,
-                  FieldByName('LABORISSUE_ID').AsInteger,
-                  FieldByName('LABORISSUE_NAME').AsString,
-                  FieldByName('LABORISSUE_CODELITER').AsString,
-                  FieldByName('NAME_PRICE').AsString
-                                ]);
-
-             mds_src.AppendRecord([
-                  FieldByName('BASEPRICE_ID').AsInteger,
-                  FieldByName('BASEPRICE_PROC_NAME').AsString,
-                  FieldByName('COST_PROC_PRICE').AsCurrency,
-                  FieldByName('LABORISSUE_ID').AsInteger,
-                  FieldByName('LABORISSUE_NAME').AsString,
-                  FieldByName('LABORISSUE_CODELITER').AsString,
-                  FieldByName('NAME_PRICE').AsString
-                                ]);
-          Next;
-        end;
-      end;
-      tmpTrans.Commit;
-
-      mds_common.First;
+//      tmpTrans.StartTransaction;
+//
+//      with tmpQry do
+//      begin
+//        Close;
+//        SQL.Text:= SQLTextResultSelect;
+//        ExecQuery;
+//
+//        while not Eof do
+//        begin
+//             mds_common.AppendRecord([
+//                  FieldByName('BASEPRICE_ID').AsInteger,
+//                  FieldByName('BASEPRICE_PROC_NAME').AsString,
+//                  FieldByName('COST_PROC_PRICE').AsCurrency,
+//                  FieldByName('LABORISSUE_ID').AsInteger,
+//                  FieldByName('LABORISSUE_NAME').AsString,
+//                  FieldByName('LABORISSUE_CODELITER').AsString,
+//                  FieldByName('NAME_PRICE').AsString
+//                                ]);
+//
+//             mds_src.AppendRecord([
+//                  FieldByName('BASEPRICE_ID').AsInteger,
+//                  FieldByName('BASEPRICE_PROC_NAME').AsString,
+//                  FieldByName('COST_PROC_PRICE').AsCurrency,
+//                  FieldByName('LABORISSUE_ID').AsInteger,
+//                  FieldByName('LABORISSUE_NAME').AsString,
+//                  FieldByName('LABORISSUE_CODELITER').AsString,
+//                  FieldByName('NAME_PRICE').AsString
+//                                ]);
+//          Next;
+//        end;
+//      end;
+//      tmpTrans.Commit;
+//
+//      mds_common.First;
       FillCbbPrice(Sender);
       cbbPriceChange(Sender);
-
       actTreeShowOffExecute(Sender);
-    except
-      on E: EFIBError do
-      begin
-        tmpTrans.Rollback;
-        Application.MessageBox(PChar(E.Message), 'Ошибка доступа к данным', MB_ICONERROR);
-      end;
-    end;
+//    except
+//      on E: EFIBError do
+//      begin
+//        tmpTrans.Rollback;
+//        Application.MessageBox(PChar(E.Message), 'Ошибка доступа к данным', MB_ICONERROR);
+//      end;
+//    end;
   finally
     mds_common.EnableControls;
   end;

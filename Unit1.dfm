@@ -476,8 +476,8 @@ object Form1: TForm1
     Top = 368
   end
   object actList: TActionList
-    Left = 136
-    Top = 88
+    Left = 128
+    Top = 80
     object actPriceFill: TAction
       Category = 'price'
       Caption = 'actPriceFill'
@@ -598,6 +598,16 @@ object Form1: TForm1
       Category = 'Node'
       Caption = '...'
       OnExecute = ActItemSelectExecute
+    end
+    object actGetCommonData: TAction
+      Category = 'price'
+      Caption = 'actGetCommonData'
+      OnExecute = actGetCommonDataExecute
+    end
+    object actSetPriceFilter: TAction
+      Category = 'price'
+      Caption = 'actSetPriceFilter'
+      OnExecute = actSetPriceFilterExecute
     end
   end
   object mds_laborissue: TMemTableEh

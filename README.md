@@ -2,6 +2,10 @@
 
 VTV Manipulation Project
 
+#### 1.0.20
+- fix some bugs
+- implemented delete action from table price
+
 #### 1.0.19
 - implemented tree modification and saving of results
 
